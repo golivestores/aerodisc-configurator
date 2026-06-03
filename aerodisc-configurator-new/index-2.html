@@ -1,0 +1,3301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aerodisc Wheel Configurator</title>
+  <link rel="icon" type="image/jpeg" href="public/wheel-1.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Archivo+Black&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      /* Configurator now uses the light palette too (matches .lite below) */
+      --surface: #ffffff;
+      --surface-2: #f1efea;
+      --border: rgba(20,18,12,0.12);
+      --text: #16150f;
+      --text-muted: rgba(22,21,15,0.55);
+      --red: #D5001C;
+      --chalk: #E8E4D9;
+      --guards-red: #B8001F;
+      --gentian-blue: #1C3D6E;
+      --transition: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Light theme scope: everything BELOW the configurator (nav → footer).
+       The configurator stays outside `.lite` and keeps the dark :root tokens. */
+    .lite {
+      --surface:    #ffffff;
+      --surface-2:  #f1efea;
+      --border:     rgba(20,18,12,0.12);
+      --text:       #16150f;
+      --text-muted: rgba(22,21,15,0.55);
+      --black:      #faf9f6;
+      --bg:         #faf9f6;
+      --bg-alt:     #f1efea;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .lite .section-nav { background: rgba(250,249,246,0.85); }
+    .lite .fs-hero { background: var(--bg-alt); }
+
+    html, body {
+      min-height: 100%;
+      background: var(--surface-2);
+      color: var(--text);
+      font-family: 'Archivo', sans-serif;
+      font-weight: 400;
+    }
+    html { scroll-padding-top: 64px; }
+    @media (max-width: 480px) { html { scroll-padding-top: 44px; } }
+    /* `clip` prevents the scroll-container creation that `hidden` would
+       trigger and would break any descendant `position: sticky`. */
+    body { overflow-x: clip; }
+
+    /* ── Layout ── */
+    .app {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      grid-template-rows: 1fr auto;
+      height: 100dvh;
+      width: 100vw;
+    }
+
+    /* ── Car Stage ── */
+    .stage {
+      grid-column: 1;
+      grid-row: 1 / 3;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 38%, #ffffff 0%, #e7e6e0 100%);
+    }
+
+    .stage-bg { display: none; }
+    .stage-floor { display: none; }
+
+    .car-img-wrapper {
+      position: absolute;
+      inset: 0;
+    }
+
+    .car-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      opacity: 0;
+      transition: opacity var(--transition);
+      z-index: 2;
+    }
+
+    .car-img.active {
+      opacity: 1;
+    }
+
+    .car-img.fade-out {
+      opacity: 0;
+    }
+
+    /* ── Intro last frame (bridge between video and car image) ── */
+    #introLastFrame {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 600ms ease;
+    }
+
+    /* ── Intro Video ── */
+    #introVideo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 5;
+      opacity: 1;
+      transition: opacity 800ms ease;
+      pointer-events: none;
+    }
+
+    #introVideo.fade-out {
+      opacity: 0;
+    }
+
+    /* loading shimmer */
+    .stage-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 200ms;
+      pointer-events: none;
+    }
+
+    .stage-loading.visible { opacity: 1; }
+
+    .loader-ring {
+      width: 32px;
+      height: 32px;
+      border: 1.5px solid rgba(0,0,0,0.1);
+      border-top-color: rgba(0,0,0,0.5);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* corner label */
+    .stage-label {
+      position: absolute;
+      top: 32px;
+      left: 36px;
+      pointer-events: none;
+    }
+
+    .stage-label-model {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: clamp(28px, 3vw, 42px);
+      letter-spacing: 0.04em;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .stage-label-sub {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── Config Panel ── */
+    .panel {
+      grid-column: 2;
+      grid-row: 1 / 3;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0,0,0,0.1) transparent;
+    }
+
+    .panel-header {
+      padding: 32px 28px 24px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .panel-header-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 8px;
+    }
+
+    .panel-header-title {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 30px;
+      letter-spacing: 0.03em;
+      line-height: 1;
+    }
+
+    .panel-header-price {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .panel-header-price span {
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    /* Sections */
+    .config-section {
+      padding: 24px 28px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .section-label {
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* Color swatches */
+    .color-grid {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+    }
+
+    .color-option {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 6px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: border-color 180ms, background 180ms;
+      position: relative;
+      text-align: center;
+    }
+
+    .color-option:hover {
+      border-color: rgba(0,0,0,0.12);
+      background: rgba(0,0,0,0.03);
+    }
+
+    .color-option.active {
+      border-color: rgba(0,0,0,0.3);
+      background: rgba(0,0,0,0.05);
+    }
+
+    .color-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .color-swatch.metallic::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, transparent 60%);
+    }
+
+    .color-info { flex: none; width: 100%; }
+
+    /* hide the right-side check indicator in row layout */
+    .color-option .color-check { display: none; }
+
+    .color-name {
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    .color-type {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    .color-check {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 180ms, background 180ms;
+    }
+
+    .color-option.active .color-check {
+      border-color: var(--text);
+      background: var(--text);
+    }
+
+    .color-check-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+      opacity: 0;
+      transition: opacity 180ms;
+    }
+
+    .color-option.active .color-check-dot { opacity: 1; }
+
+    /* Wheel options — 3x3 grid of pattern thumbnails */
+    .wheel-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .wheel-option {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--surface-2);
+      border: 2px solid transparent;
+      transition: border-color 180ms, transform 180ms;
+    }
+
+    .wheel-option:hover {
+      border-color: rgba(0,0,0,0.25);
+    }
+
+    .wheel-option.active {
+      border-color: var(--text);
+    }
+
+    .wheel-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 200ms;
+    }
+
+    .wheel-selected-label {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+    .wheel-selected-label .price {
+      color: var(--text-muted);
+      margin-left: 6px;
+      font-size: 12px;
+    }
+    .wheel-selected-label .sku {
+      margin-top: 4px;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      font-family: 'Archivo Black', sans-serif;
+    }
+
+    /* Summary */
+    .config-summary {
+      padding: 20px 28px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 5px 0;
+      font-size: 12px;
+    }
+
+    .summary-label { color: var(--text-muted); }
+    .summary-value { color: var(--text); letter-spacing: 0.03em; }
+
+    .summary-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 0;
+    }
+
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 4px 0;
+    }
+
+    .summary-total-label {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .summary-total-price {
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    /* CTA */
+    .panel-cta {
+      padding: 20px 28px 28px;
+      flex-shrink: 0;
+      margin-top: auto;
+    }
+
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      font-family: 'Archivo', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 200ms, transform 100ms;
+    }
+
+    .btn-primary:hover { background: #b8001b; }
+    .btn-primary:active { transform: scale(0.99); }
+
+    .btn-secondary {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 13px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid rgba(0,0,0,0.18);
+      border-radius: 3px;
+      font-family: 'Archivo', sans-serif;
+      font-size: 12px;
+      font-weight: 300;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 200ms, background 200ms;
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.04);
+    }
+
+    /* Size selector (compact dropdown) */
+    .size-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .size-row .size-row-label {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      flex: 1;
+    }
+    .size-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 3px;
+      padding: 7px 28px 7px 12px;
+      font-family: 'Archivo', sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='none' stroke='%2316150f' stroke-width='1.4' d='M1 1l4 4 4-4'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: border-color 180ms;
+    }
+    .size-select:hover { border-color: rgba(0,0,0,0.32); }
+    .size-select:focus { outline: none; border-color: var(--text); }
+    /* Tighter padding for the size config-section */
+    .config-section.size-section { padding: 14px 28px; }
+
+    /* Payments row */
+    .payments {
+      padding: 16px 28px 8px;
+      flex-shrink: 0;
+    }
+    .payments-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .payments-grid img {
+      height: 22px;
+      width: auto;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.10);
+      border-radius: 3px;
+      padding: 2px 4px;
+      display: block;
+    }
+
+    /* Product description (above accordions) */
+    .product-desc {
+      padding: 20px 28px 4px;
+      flex-shrink: 0;
+    }
+    .product-desc-title {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .product-desc-body {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    /* Accordion */
+    .accordions {
+      padding: 4px 28px 24px;
+      flex-shrink: 0;
+    }
+    .accordion-item {
+      border-top: 1px solid var(--border);
+    }
+    .accordion-item:last-child { border-bottom: 1px solid var(--border); }
+    .accordion-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-family: 'Archivo', sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-align: left;
+    }
+    .accordion-header .chev {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 220ms ease;
+      font-size: 10px;
+      color: var(--text);
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+    .accordion-item.open .accordion-header .chev { transform: rotate(180deg); }
+    .accordion-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 280ms ease;
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+    .accordion-body-inner { padding: 0 0 16px; }
+
+    /* Stage status info */
+    .stage-info {
+      position: absolute;
+      top: 32px;
+      right: 32px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      backdrop-filter: blur(8px);
+      display: none;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 860px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 95vw 1fr;
+        height: auto;
+        min-height: 100dvh;
+      }
+
+      .stage {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .stage-label { top: 20px; left: 20px; }
+
+      .panel {
+        grid-column: 1;
+        grid-row: 2;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        overflow: visible;
+      }
+
+      .color-swatch { width: 32px; height: 32px; }
+      .color-name { font-size: 12px; }
+    }
+    /* ── Wheel spin overlays ── */
+    .wheel-spin-overlay {
+      position: absolute;
+      border-radius: 50%;
+      object-fit: cover;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 5;
+      /* mask to circle so the rectangular JPEG looks round */
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.35);
+    }
+
+    .wheel-spin-overlay.spinning {
+      opacity: 1;
+      animation: wheelSpin 0.45s linear infinite;
+    }
+
+    .wheel-spin-overlay.visible {
+      opacity: 1;
+    }
+
+    @keyframes wheelSpin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(-360deg); }
+    }
+
+
+    /* ══════════════════════════════════════════════════════════════════
+       STICKY SECTION NAV (anchors PDP sections below configurator)
+       ══════════════════════════════════════════════════════════════════ */
+    .section-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .section-nav-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 14px 6vw;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .nav-brand { display: flex; flex-direction: column; flex-shrink: 0; }
+    .nav-brand-name {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 18px;
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+    .nav-brand-price {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+    .nav-brand-price strong { color: var(--text); font-weight: 400; letter-spacing: 0.04em; }
+    .nav-links {
+      flex: 1;
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      justify-content: center;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .nav-link {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-decoration: none;
+      position: relative;
+      transition: color 200ms;
+    }
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 50%; bottom: 0;
+      width: 0; height: 1px;
+      background: var(--red);
+      transition: width 240ms, left 240ms;
+    }
+    .nav-link:hover { color: var(--text); }
+    .nav-link.active { color: var(--text); }
+    .nav-link.active::after { width: 24px; left: calc(50% - 12px); }
+    .nav-cta {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      background: var(--red);
+      color: #fff;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: background 200ms, transform 120ms;
+    }
+    .nav-cta:hover { background: #b8001b; }
+    .nav-cta:active { transform: scale(0.97); }
+    .nav-cta-arrow {
+      width: 12px; height: 12px;
+      border-top: 1px solid #fff;
+      border-right: 1px solid #fff;
+      transform: rotate(-45deg);
+    }
+    @media (max-width: 980px) {
+      .nav-brand { display: none; }
+      .nav-links { justify-content: flex-start; }
+    }
+    @media (max-width: 600px) {
+      .section-nav-inner { padding: 10px 4vw; gap: 12px; }
+      .nav-link { padding: 8px 10px; font-size: 10px; letter-spacing: 0.14em; }
+      .nav-cta { padding: 9px 14px; font-size: 10px; letter-spacing: 0.16em; }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════
+       PDP SECTIONS — 7 conventional blocks below the configurator
+       ══════════════════════════════════════════════════════════════════ */
+    /* ─── Unified section system ─── */
+    .pdp {
+      padding: 120px 0;
+      border-top: 1px solid var(--border);
+    }
+    .pdp-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 6vw;
+    }
+    .section-head { margin-bottom: 56px; }
+    .pdp-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 14px;
+    }
+    .pdp-title {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: clamp(32px, 4.2vw, 54px);
+      line-height: 1.0;
+      letter-spacing: -0.01em;
+      margin-bottom: 22px;
+      text-transform: uppercase;
+    }
+    .pdp-lead {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--text-muted);
+      max-width: 540px;
+    }
+    .pdp-lead em { color: var(--text); font-style: italic; }
+
+    /* Reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 500ms cubic-bezier(0.2,0,0,1), transform 500ms cubic-bezier(0.2,0,0,1);
+    }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+
+    /* Stagger-reveal for repeating content blocks (cards/cells/items) */
+    .rv {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 600ms cubic-bezier(0.2,0,0,1), transform 600ms cubic-bezier(0.2,0,0,1);
+    }
+    .rv.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal, .rv { opacity: 1 !important; transform: none !important; transition: none !important; }
+    }
+
+    /* §1 Features grid — Lucid-style hairline cells + quote */
+    /* §1 Features — Bento image tiles (light) */
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: 200px;
+      gap: 14px;
+    }
+    .bento-tile {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--surface-2);
+    }
+    .bento-tile.t-aero    { grid-column: 1 / 3; grid-row: 1 / 3; }
+    .bento-tile.t-protect { grid-column: 3 / 5; grid-row: 1 / 2; }
+    .bento-tile.t-install { grid-column: 3 / 4; grid-row: 2 / 3; }
+    .bento-tile.t-patent  { grid-column: 4 / 5; grid-row: 2 / 3; }
+    .bento-tile img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 600ms cubic-bezier(0.2,0,0,1);
+    }
+    .bento-tile:hover img { transform: scale(1.05); }
+    .bento-tile::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(8,8,8,0.85) 0%, rgba(8,8,8,0.28) 46%, rgba(8,8,8,0) 76%);
+    }
+    .bento-body {
+      position: absolute; inset: 0;
+      z-index: 1;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 26px;
+    }
+    .bento-eyebrow {
+      font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
+      color: rgba(255,255,255,0.72); margin-bottom: 10px;
+    }
+    .bento-num {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 40px; line-height: 0.98; letter-spacing: -0.01em;
+      color: #fff; margin-bottom: 8px;
+    }
+    .bento-num.sm { font-size: 26px; letter-spacing: 0; }
+    .bento-num sup {
+      font-size: 0.36em; vertical-align: top;
+      color: rgba(255,255,255,0.72); margin-left: 4px; letter-spacing: 0.04em;
+    }
+    .t-aero .bento-num { font-size: 64px; }
+    .bento-desc {
+      font-size: 13px; line-height: 1.5;
+      color: rgba(255,255,255,0.82); max-width: 320px;
+    }
+    .feat-quote {
+      margin: 14px 0 0;
+      max-width: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--red);
+      border-radius: 16px;
+      padding: 34px 40px;
+    }
+    .feat-quote p {
+      font-style: italic;
+      font-size: 21px;
+      line-height: 1.55;
+      color: var(--text);
+      font-weight: 300;
+      margin: 0;
+    }
+    .feat-quote cite {
+      display: block;
+      margin-top: 18px;
+      font-style: normal;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+
+    /* §Lifestyle — sticky scrollytelling (left image pins, right captions scroll) */
+    .ss { display: grid; grid-template-columns: 1fr 1fr; gap: 6vw; align-items: start; margin-top: 4px; }
+    .ss-media {
+      position: sticky; top: 0;
+      height: 100dvh;
+      display: flex; align-items: center;
+    }
+    .ss-stack {
+      position: relative; width: 100%;
+      aspect-ratio: 4 / 3; max-height: 78vh;
+      border-radius: 18px; overflow: hidden; background: var(--surface-2);
+    }
+    .ss-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; object-fit: cover;
+      opacity: 0; transition: opacity 600ms ease;
+    }
+    .ss-img.active { opacity: 1; }
+    .ss-step {
+      min-height: 100dvh;
+      display: flex; flex-direction: column; justify-content: center;
+      max-width: 470px;
+    }
+    .ss-step-img { display: none; }
+    .ss-index {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 15px; letter-spacing: 0.22em;
+      color: var(--red); margin-bottom: 16px;
+    }
+    .ss-title {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: clamp(28px, 3.4vw, 46px);
+      line-height: 1.02; letter-spacing: -0.01em;
+      text-transform: uppercase; color: var(--text);
+      margin-bottom: 18px;
+    }
+    .ss-body {
+      font-size: 16px; line-height: 1.7;
+      color: var(--text-muted);
+    }
+    .ss-body strong { color: var(--text); font-weight: 600; }
+
+    /* §Engineering (light) — Aero showcase figure + Install numbered steps */
+    .eng-section { padding: 110px 0; border-top: 1px solid var(--border); }
+    .eng-wrap { max-width: 1320px; margin: 0 auto; padding: 0 6vw; }
+    .eng-head { max-width: 760px; margin-bottom: 34px; }
+    .eng-eyebrow { font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--red); margin-bottom: 14px; }
+    .eng-title { font-family: 'Archivo Black', sans-serif; font-size: clamp(30px, 3.6vw, 48px); line-height: 1.02; letter-spacing: 0.02em; text-transform: uppercase; color: var(--text); }
+    .eng-sub { font-size: 15px; color: var(--text-muted); margin-top: 12px; }
+    .eng-figure { position: relative; margin: 0 0 34px; border-radius: 18px; overflow: hidden; background: var(--surface-2); }
+    .eng-figure img { width: 100%; max-height: 68vh; object-fit: cover; display: block; }
+    .eng-figtag {
+      position: absolute; top: 18px; left: 18px;
+      background: rgba(255,255,255,0.9); color: var(--text);
+      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+      padding: 7px 13px; border-radius: 100px;
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    }
+    .eng-figcap {
+      position: absolute; bottom: 16px;
+      max-width: 42%;
+      background: rgba(255,255,255,0.9); color: var(--text);
+      font-size: 11px; line-height: 1.35; letter-spacing: 0.01em;
+      padding: 8px 13px; border-radius: 12px;
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    }
+    .eng-figcap.left  { left: 16px; }
+    .eng-figcap.right { right: 16px; text-align: right; }
+    .eng-figcap strong { color: var(--red); font-weight: 700; }
+    .eng-points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .eng-point { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+    .eng-point span { font-family: 'Archivo Black', sans-serif; font-size: 22px; color: var(--red); display: block; margin-bottom: 10px; }
+    .eng-point p { font-size: 14px; line-height: 1.6; color: var(--text-muted); margin: 0; }
+    .eng-point strong { color: var(--text); font-weight: 600; }
+    .eng-note { font-size: 11.5px; line-height: 1.55; color: rgba(22,21,15,0.4); margin-top: 22px; max-width: 760px; }
+    .eng-install {
+      margin-top: 28px; padding-top: 60px; border-top: 1px solid var(--border);
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6vw; align-items: center;
+    }
+    .eng-install-media { border-radius: 18px; overflow: hidden; aspect-ratio: 4 / 3; background: var(--surface-2); }
+    .eng-install-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .eng-steps { list-style: none; margin: 24px 0 0; padding: 0; }
+    .eng-steps li { display: flex; gap: 18px; padding: 18px 0; border-bottom: 1px solid var(--border); }
+    .eng-steps li:last-child { border-bottom: none; }
+    .eng-step-n { font-family: 'Archivo Black', sans-serif; font-size: 26px; color: var(--red); flex-shrink: 0; line-height: 1; }
+    .eng-steps div { font-size: 14.5px; line-height: 1.6; color: var(--text-muted); }
+    .eng-steps strong { color: var(--text); font-weight: 600; }
+
+    /* §PAT Patented Locking ──────────────────────────────────── */
+    .patent-section {
+      padding: 110px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+    .patent-grid {
+      max-width: 1320px; margin: 0 auto; padding: 0 6vw;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6vw; align-items: center;
+    }
+    .patent-figure {
+      position: relative;
+      border-radius: 20px; overflow: hidden;
+      aspect-ratio: 1 / 1;
+      background: radial-gradient(circle at 50% 42%, #2b2b2b 0%, #0d0d0d 72%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .patent-figure img {
+      width: 84%; height: 84%; object-fit: contain;
+      filter: drop-shadow(0 24px 40px rgba(0,0,0,0.5));
+    }
+    .patent-seal {
+      position: absolute; bottom: 20px; right: 20px;
+      width: 94px; height: 94px; border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.4);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; color: #fff;
+      background: rgba(213,0,28,0.18);
+      -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    }
+    .patent-seal strong { font-family: 'Archivo Black', sans-serif; font-size: 20px; letter-spacing: 0.12em; line-height: 1; }
+    .patent-seal span { font-size: 7.5px; letter-spacing: 0.18em; text-transform: uppercase; margin-top: 4px; color: rgba(255,255,255,0.82); }
+    .patent-text { text-align: left; }
+    .patent-text .pdp-title { text-align: left; }
+    .patent-badge {
+      display: inline-block;
+      padding: 9px 18px;
+      border: 1px solid var(--red);
+      color: var(--red);
+      font-size: 10px;
+      letter-spacing: 0.36em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .patent-num {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 34px;
+      letter-spacing: 0.22em;
+      color: var(--red);
+      margin: 14px 0 24px;
+    }
+    .patent-quote {
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin: 0;
+    }
+    .patent-quote em { color: var(--text); font-style: italic; }
+    .patent-divider {
+      width: 40px; height: 1px;
+      background: var(--red);
+      margin: 32px auto;
+    }
+
+    /* §HER Heritage timeline ─────────────────────────────────── */
+    .heritage-timeline {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 28px;
+      padding: 12px 6vw 0;
+    }
+    .heritage-timeline::before {
+      content: "";
+      position: absolute;
+      left: 6vw;
+      right: 6vw;
+      top: 18px;
+      height: 1px;
+      background: var(--border);
+      z-index: 0;
+    }
+    .tl-item {
+      position: relative;
+      padding-top: 44px;
+    }
+    .tl-dot {
+      position: absolute;
+      top: 13px;
+      left: 0;
+      width: 11px;
+      height: 11px;
+      background: var(--red);
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px var(--bg);
+      z-index: 1;
+    }
+    .tl-year {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 38px;
+      letter-spacing: 0.04em;
+      color: var(--red);
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .tl-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      transition: transform 240ms cubic-bezier(0.2,0,0,1), box-shadow 240ms;
+    }
+    .tl-item:hover .tl-card {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 32px -16px rgba(0,0,0,0.22);
+    }
+    .tl-title {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 18px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .tl-body {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--text-muted);
+    }
+    @media (max-width: 860px) {
+      /* Mobile: horizontal swipe of year cards */
+      .heritage-timeline {
+        display: flex;
+        grid-template-columns: none;
+        gap: 14px;
+        overflow-x: auto;
+        padding: 4px 6vw 8px;
+        scroll-snap-type: x mandatory;
+        scroll-padding-left: 6vw;
+        scrollbar-width: none;
+      }
+      .heritage-timeline::before { display: none; }
+      .heritage-timeline::-webkit-scrollbar { display: none; }
+      .tl-item { flex: 0 0 76vw; scroll-snap-align: start; padding: 0; }
+      .tl-dot { display: none; }
+      .tl-year { font-size: 34px; margin-bottom: 12px; }
+    }
+
+    /* §BOX What's in the Box ────────────────────────────────── */
+    .box-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .box-item {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 240ms cubic-bezier(0.2,0,0,1), box-shadow 240ms, border-color 240ms;
+    }
+    .box-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 36px -18px rgba(0,0,0,0.25);
+      border-color: rgba(20,18,12,0.2);
+    }
+    .box-num {
+      position: absolute; top: 14px; right: 16px;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 14px; letter-spacing: 0.08em;
+      color: rgba(22,21,15,0.22);
+    }
+    .box-item-img {
+      aspect-ratio: 1;
+      background: radial-gradient(circle at 50% 42%, #ffffff 0%, #ebeae4 100%);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .box-item-img img {
+      width: 76%; height: 76%;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,0.18));
+    }
+    .box-item-qty {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      color: var(--red);
+    }
+    .box-item-name {
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--text);
+    }
+
+    /* §UGC TikTok showcase */
+    .ugc-section { padding: 120px 0; border-top: 1px solid var(--border); }
+    .ugc-track {
+      max-width: 1320px; margin: 0 auto;
+      padding: 0 6vw;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 14px;
+    }
+    .ugc-card {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      background: #111;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .ugc-card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 700ms cubic-bezier(0.2,0,0,1);
+      display: block;
+    }
+    .ugc-card:hover img { transform: scale(1.04); }
+    .ugc-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 35%, transparent 65%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .ugc-play {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      transition: transform 200ms;
+    }
+    .ugc-card:hover .ugc-play { transform: translate(-50%, -50%) scale(1.08); }
+    .ugc-play::before {
+      content: "";
+      width: 0; height: 0;
+      border-left: 12px solid #000;
+      border-top: 7px solid transparent;
+      border-bottom: 7px solid transparent;
+      margin-left: 3px;
+    }
+    .ugc-meta {
+      position: absolute;
+      left: 14px; right: 14px; bottom: 14px;
+      z-index: 2;
+    }
+    .ugc-handle {
+      font-size: 12px;
+      color: #fff;
+      margin-bottom: 4px;
+      font-weight: 400;
+    }
+    .ugc-stat {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: rgba(240,237,232,0.72);
+      text-transform: uppercase;
+    }
+
+    /* §WATCH Tabbed YouTube */
+    .watch-layout {
+      display: grid;
+      grid-template-columns: 1.7fr 1fr;
+      gap: 26px;
+      align-items: start;
+    }
+    .watch-frame {
+      display: none;
+      aspect-ratio: 16 / 9;
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .watch-frame.active { display: block; }
+    .watch-frame iframe {
+      width: 100%; height: 100%;
+      border: 0;
+      display: block;
+    }
+    .watch-list { display: flex; flex-direction: column; gap: 14px; }
+    .watch-tab {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      cursor: pointer;
+      transition: border-color 200ms, box-shadow 200ms, transform 200ms;
+    }
+    .watch-tab:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -14px rgba(0,0,0,0.22); }
+    .watch-tab.active { border-color: var(--red); }
+    .watch-thumb {
+      position: relative;
+      width: 124px; flex-shrink: 0;
+      aspect-ratio: 16 / 9;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #111;
+    }
+    .watch-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .watch-thumb::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.2); }
+    .watch-play {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,0.92); z-index: 1;
+    }
+    .watch-play::before {
+      content: ""; position: absolute; top: 50%; left: 54%; transform: translate(-50%, -50%);
+      border-style: solid; border-width: 6px 0 6px 10px;
+      border-color: transparent transparent transparent var(--red);
+    }
+    .watch-tab-meta { display: flex; flex-direction: column; }
+    .watch-tab-title {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 17px; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text);
+    }
+    .watch-tab-sub { font-size: 12px; line-height: 1.45; color: var(--text-muted); margin-top: 5px; }
+
+    /* §RVW Reviews */
+    /* §Reviews — sticky score panel + horizontal review cards */
+    .rvw-layout {
+      max-width: 1320px; margin: 0 auto; padding: 0 6vw;
+      display: grid; grid-template-columns: 320px 1fr; gap: 44px; align-items: start;
+    }
+    .rvw-summary {
+      position: sticky; top: 92px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 32px;
+    }
+    .rvw-score-num {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 76px;
+      line-height: 1;
+      letter-spacing: 0.02em;
+      color: var(--text);
+    }
+    .rvw-stars {
+      color: var(--red);
+      letter-spacing: 2px;
+      font-size: 16px;
+      margin: 8px 0;
+    }
+    .rvw-count {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .rvw-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+    .rvw-bar { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-muted); }
+    .rvw-bar-label { flex-shrink: 0; width: 26px; letter-spacing: 0.08em; }
+    .rvw-bar-track { flex: 1; height: 5px; background: rgba(20,18,12,0.08); border-radius: 3px; overflow: hidden; }
+    .rvw-bar-fill { height: 100%; background: var(--red); }
+    .rvw-bar-pct { flex-shrink: 0; width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
+    .rvw-scroll {
+      display: flex; gap: 18px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .rvw-scroll::-webkit-scrollbar { display: none; }
+    .rvw-card {
+      flex: 0 0 300px;
+      scroll-snap-align: start;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .rvw-card-photo { aspect-ratio: 4 / 3; background: var(--surface-2); overflow: hidden; }
+    .rvw-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rvw-card-inner { padding: 22px; display: flex; flex-direction: column; flex: 1; }
+    .rvw-card-stars { color: var(--red); font-size: 13px; letter-spacing: 1px; margin-bottom: 12px; }
+    .rvw-card-title {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 18px;
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+    .rvw-card-body {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+      flex: 1;
+    }
+    .rvw-card-author {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .rvw-verified {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rvw-verified::before {
+      content: "";
+      width: 6px; height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+    }
+
+    /* §FAQ */
+    /* §FAQ — sticky image aside + accordion split */
+    .faq-split {
+      max-width: 1320px; margin: 0 auto; padding: 0 6vw;
+      display: grid; grid-template-columns: 0.82fr 1fr; gap: 6vw; align-items: start;
+    }
+    .faq-aside { position: sticky; top: 92px; }
+    .faq-figure {
+      margin-top: 26px; border-radius: 18px; overflow: hidden;
+      aspect-ratio: 3 / 4; background: var(--surface-2);
+    }
+    .faq-figure img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .faq-list { max-width: none; margin: 0; }
+    .faq-item { border-top: 1px solid var(--border); }
+    .faq-item:last-child { border-bottom: 1px solid var(--border); }
+    .faq-q {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      padding: 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      text-align: left;
+      font-size: 17px;
+      font-family: 'Archivo', sans-serif;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      gap: 24px;
+    }
+    .faq-q-mark {
+      flex-shrink: 0;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 26px;
+      color: var(--text-muted);
+      transition: color 240ms, transform 240ms;
+      line-height: 1;
+    }
+    .faq-item.open .faq-q-mark { color: var(--red); transform: rotate(45deg); }
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 440ms cubic-bezier(0.2,0,0,1);
+    }
+    .faq-a-inner {
+      padding: 0 0 24px;
+      font-size: 14.5px;
+      line-height: 1.7;
+      color: var(--text-muted);
+      max-width: 720px;
+    }
+
+    /* §RECO Recommendations */
+    .reco-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    .reco-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 240ms cubic-bezier(0.2,0,0,1), box-shadow 240ms, border-color 240ms;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+    .reco-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 22px 44px -22px rgba(0,0,0,0.28);
+      border-color: rgba(20,18,12,0.18);
+    }
+    .reco-card-img {
+      position: relative;
+      aspect-ratio: 1;
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, #ebeae4 100%);
+      overflow: hidden;
+    }
+    .reco-card-img img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      padding: 14%;
+      transition: transform 600ms cubic-bezier(0.2,0,0,1);
+      display: block;
+      filter: drop-shadow(0 12px 18px rgba(0,0,0,0.16));
+    }
+    .reco-card:hover .reco-card-img img { transform: scale(1.05); }
+    .reco-quickadd {
+      position: absolute; left: 14px; right: 14px; bottom: 14px;
+      background: var(--red); color: #fff;
+      border: none; border-radius: 100px; padding: 11px;
+      font-family: 'Archivo', sans-serif;
+      font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 220ms, transform 220ms, background 160ms;
+    }
+    .reco-quickadd:hover { background: #b8001b; }
+    .reco-card:hover .reco-quickadd { opacity: 1; transform: none; }
+    @media (hover: none) { .reco-quickadd { opacity: 1; transform: none; } }
+    .reco-card-body { padding: 18px 18px 20px; }
+    .reco-card-eyebrow {
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .reco-card-name {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 19px;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .reco-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+    .reco-card-price { color: var(--text); }
+    .reco-card-stars { color: var(--red); font-size: 11px; letter-spacing: 1px; }
+
+    /* §FOOT */
+    .foot {
+      border-top: 1px solid var(--border);
+      padding: 80px 0 28px;
+      background: var(--surface);
+    }
+    .foot-grid {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 6vw;
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1fr;
+      gap: 48px;
+    }
+    .foot-brand-name {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 28px;
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+    }
+    .foot-brand-desc {
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--text-muted);
+      max-width: 340px;
+      margin-bottom: 22px;
+    }
+    .foot-newsletter {
+      display: flex;
+      border: 1px solid var(--border);
+      max-width: 340px;
+    }
+    .foot-newsletter input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      padding: 12px 14px;
+      font-size: 13px;
+      font-family: 'Archivo', sans-serif;
+    }
+    .foot-newsletter input::placeholder { color: var(--text-muted); }
+    .foot-newsletter input:focus { outline: none; background: rgba(255,255,255,0.04); }
+    .foot-newsletter button {
+      background: var(--red);
+      border: none;
+      color: #fff;
+      padding: 0 18px;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 200ms;
+    }
+    .foot-newsletter button:hover { background: #b8001b; }
+    .foot-col-title {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+    .foot-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .foot-col a {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 200ms;
+    }
+    .foot-col a:hover { color: var(--red); }
+    .foot-bottom {
+      max-width: 1320px;
+      margin: 56px auto 0;
+      padding: 24px 6vw 0;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .foot-social { display: flex; gap: 12px; }
+    .foot-social a {
+      width: 32px; height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 12px;
+      transition: border-color 200ms, color 200ms;
+    }
+    .foot-social a:hover { color: var(--text); border-color: rgba(255,255,255,0.3); }
+    .foot-legal { display: flex; gap: 24px; }
+    .foot-legal a { color: var(--text-muted); text-decoration: none; }
+    .foot-legal a:hover { color: var(--text); }
+
+    /* §FS Fullscreen hero — Rimac-style edge label + corner copy */
+    .fs-hero {
+      position: relative;
+      height: clamp(560px, 84vh, 860px);
+      overflow: hidden;
+      border-top: 1px solid var(--border);
+    }
+    .fs-hero-img {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+    .fs-hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.12) 40%, transparent 62%);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .fs-hero-vlabel {
+      position: absolute;
+      top: 80px; right: 44px; bottom: 80px;
+      display: flex;
+      align-items: center;
+      writing-mode: vertical-rl;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.32em;
+      color: rgba(240,237,232,0.55);
+      text-transform: uppercase;
+      z-index: 3;
+      pointer-events: none;
+      user-select: none;
+    }
+    .fs-hero-brand {
+      position: absolute;
+      top: 32px;
+      left: 6vw;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      z-index: 3;
+    }
+    .fs-hero-content {
+      position: absolute;
+      left: 6vw;
+      bottom: 7vh;
+      max-width: 460px;
+      z-index: 3;
+      background: rgba(255,255,255,0.86);
+      -webkit-backdrop-filter: blur(20px) saturate(1.1);
+      backdrop-filter: blur(20px) saturate(1.1);
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: 20px;
+      padding: 40px 42px;
+      box-shadow: 0 30px 60px -22px rgba(0,0,0,0.5);
+    }
+    .fs-hero-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .fs-hero-title {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: clamp(28px, 3.4vw, 44px);
+      letter-spacing: -0.01em;
+      line-height: 1.02;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+    .fs-hero-body {
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--text-muted);
+    }
+    .fs-hero-body strong { color: var(--text); font-weight: 600; }
+    .fs-hero-disclaimer {
+      margin-top: 14px;
+      font-size: 10.5px;
+      line-height: 1.55;
+      letter-spacing: 0.02em;
+      color: rgba(22,21,15,0.4);
+    }
+    .fs-hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+      padding: 12px 22px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.45);
+      color: var(--text);
+      font-family: 'Archivo', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 200ms, border-color 200ms, transform 120ms;
+    }
+    .fs-hero-cta:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--text);
+    }
+    .fs-hero-cta:active { transform: scale(0.98); }
+    .fs-hero-cta-arrow {
+      width: 12px; height: 12px;
+      border-top: 1px solid currentColor;
+      border-right: 1px solid currentColor;
+      transform: rotate(45deg);
+      transition: transform 200ms;
+    }
+    .fs-hero-cta:hover .fs-hero-cta-arrow { transform: rotate(45deg) translate(2px, -2px); }
+
+    /* Mobile (≤860px) */
+    @media (max-width: 860px) {
+      .pdp { padding: 64px 0; }
+      .bento { grid-template-columns: 1fr 1fr; grid-auto-rows: 156px; }
+      .bento-tile.t-aero    { grid-column: 1 / 3; grid-row: 1 / 3; }
+      .bento-tile.t-protect { grid-column: 1 / 3; grid-row: 3 / 4; }
+      .bento-tile.t-install { grid-column: 1 / 2; grid-row: 4 / 5; }
+      .bento-tile.t-patent  { grid-column: 2 / 3; grid-row: 4 / 5; }
+      .t-aero .bento-num { font-size: 60px; }
+      .bento-num { font-size: 38px; }
+      .bento-body { padding: 20px; }
+      .feat-quote { margin-top: 14px; padding: 26px 24px; }
+      .feat-quote p { font-size: 17px; }
+
+      /* Mobile: horizontal swipe of step cards (drop the pin) */
+      .ss { display: block; }
+      .ss-media { display: none; }
+      .ss-steps {
+        display: flex; gap: 14px;
+        overflow-x: auto; scroll-snap-type: x mandatory;
+        padding: 4px 6vw 8px; scroll-padding-left: 6vw;
+        margin: 0 -6vw; scrollbar-width: none;
+      }
+      .ss-steps::-webkit-scrollbar { display: none; }
+      .ss-step {
+        flex: 0 0 80vw; scroll-snap-align: start;
+        min-height: 0; max-width: none;
+        justify-content: flex-start;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 16px; padding: 0; overflow: hidden;
+      }
+      .ss-step-img {
+        display: block; width: 100%; aspect-ratio: 4 / 3;
+        object-fit: cover; margin: 0; background: var(--surface-2);
+      }
+      .ss-index { padding: 18px 20px 0; margin-bottom: 8px; }
+      .ss-title { font-size: 24px; padding: 0 20px; margin-bottom: 10px; }
+      .ss-body { font-size: 14px; padding: 0 20px 22px; }
+      .patent-grid { grid-template-columns: 1fr; gap: 32px; }
+      .patent-figure { aspect-ratio: 4 / 3; }
+      .patent-num { font-size: 26px; }
+      .box-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+
+      .ugc-section { padding: 64px 0; }
+      .ugc-track {
+        display: grid; grid-auto-flow: column;
+        grid-template-columns: none;
+        grid-auto-columns: 58vw;
+        gap: 12px; overflow-x: auto;
+        padding: 0 6vw 8px;
+        scrollbar-width: none;
+      }
+      .ugc-track::-webkit-scrollbar { display: none; }
+      .watch-layout { grid-template-columns: 1fr; gap: 18px; }
+      .rvw-layout { grid-template-columns: 1fr; gap: 28px; }
+      .rvw-summary { position: static; }
+      .rvw-card { flex-basis: 78vw; }
+      .reco-grid {
+        display: flex; gap: 14px;
+        overflow-x: auto; scroll-snap-type: x mandatory;
+        padding: 0 6vw 8px; scroll-padding-left: 6vw;
+        margin: 0 -6vw; scrollbar-width: none;
+      }
+      .reco-grid::-webkit-scrollbar { display: none; }
+      .reco-card { flex: 0 0 60vw; scroll-snap-align: start; }
+      .foot-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
+      .foot-grid > :first-child { grid-column: 1 / -1; }
+      .foot-bottom { flex-direction: column; align-items: flex-start; }
+      .foot-legal { flex-wrap: wrap; gap: 16px; }
+      .faq-q { font-size: 15px; padding: 20px 0; }
+      .faq-split { grid-template-columns: 1fr; gap: 24px; }
+      .faq-aside { position: static; }
+      .faq-figure { aspect-ratio: 16 / 10; margin-top: 18px; }
+
+      .eng-figcap { font-size: 9.5px; padding: 6px 9px; max-width: 46%; bottom: 10px; border-radius: 9px; }
+      .eng-figcap.left { left: 10px; }
+      .eng-figcap.right { right: 10px; }
+      .eng-points { grid-template-columns: 1fr; gap: 12px; }
+      .eng-install { grid-template-columns: 1fr; gap: 24px; padding-top: 44px; }
+      .eng-install-media { order: -1; }
+      .eng-title { font-size: 32px; }
+
+      .fs-hero-brand { font-size: 18px; top: 22px; left: 6vw; }
+      .fs-hero-content { left: 5vw; right: 5vw; max-width: none; bottom: 5vh; padding: 28px 26px; }
+      .fs-hero-title { font-size: 32px; }
+      .fs-hero-body { font-size: 13px; }
+    }
+
+    /* ──── Small phones (≤480px) ──── */
+    @media (max-width: 480px) {
+      /* Configurator panel: tighter padding so things breathe */
+      .panel-header { padding: 24px 20px 16px; }
+      .panel-header-title { font-size: 28px; }
+      .config-section { padding: 20px; }
+      .config-section.size-section { padding: 12px 20px; }
+      .config-summary { padding: 16px 20px; }
+      .panel-cta { padding: 16px 20px 20px; }
+
+      /* Native form controls — avoid iOS auto-zoom on focus by using 16px */
+      .size-select { font-size: 16px; padding: 10px 30px 10px 12px; }
+
+      /* Wheel grid: 3 cols already; just tighter gap */
+      .wheel-grid { gap: 10px; }
+
+      /* Larger tap targets on buttons */
+      .btn-primary { padding: 16px; }
+      .btn-secondary { padding: 15px; }
+
+      /* Payments row — center, allow wrap into 2 lines neatly */
+      .payments { padding: 14px 20px 6px; }
+      .payments-grid { gap: 5px; justify-content: center; }
+      .payments-grid img { height: 20px; }
+
+      /* Accordion — slightly bigger touch row */
+      .accordions { padding: 4px 20px 24px; }
+      .accordion-header { padding: 16px 0; font-size: 11.5px; letter-spacing: 0.1em; }
+      .accordion-body { font-size: 12.5px; }
+
+      /* ── PDP refinements for small phones ── */
+      .pdp { padding: 52px 0; }
+      .pdp-title { font-size: 30px; }
+      .pdp-lead { font-size: 14.5px; }
+      .section-head { margin-bottom: 28px; }
+      .eng-section, .patent-section, .ugc-section { padding: 52px 0; }
+      .bento { grid-auto-rows: 132px; }
+      .t-aero .bento-num { font-size: 50px; }
+      .bento-num { font-size: 34px; }
+      .fs-hero-title { font-size: 28px; }
+      .eng-title, .ss-title { font-size: 26px; }
+      /* Swipe-card widths */
+      .ss-step { flex-basis: 84vw; }
+      .tl-item { flex-basis: 84vw; }
+      .reco-card { flex-basis: 70vw; }
+      .rvw-card { flex-basis: 84vw; }
+      .ugc-track { grid-auto-columns: 64vw; }
+      .watch-thumb { width: 104px; }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── Stage ── -->
+  <section class="stage">
+    <div class="stage-bg"></div>
+    <div class="stage-floor"></div>
+
+    <img id="introLastFrame" src="public/last-frame.jpg" alt="">
+
+    <video id="introVideo" autoplay muted playsinline>
+      <source src="video.mp4" type="video/mp4">
+    </video>
+
+    <div class="car-img-wrapper" id="carStage">
+      <!-- Images injected by JS -->
+    </div>
+
+    <!-- Wheel spin overlay (rear wheel only) -->
+    <img class="wheel-spin-overlay" id="wheelOverlayRear"  alt="" src="">
+    <!-- Front wheel overlay (static, no spin) -->
+    <img class="wheel-spin-overlay" id="wheelOverlayFront" alt="" src="">
+
+    <div class="stage-loading" id="stageLoading">
+      <div class="loader-ring"></div>
+    </div>
+
+  </section>
+
+  <!-- ── Config Panel ── -->
+  <aside class="panel">
+
+    <div class="panel-header">
+      <div class="panel-header-eyebrow">Configure Yours</div>
+      <div class="panel-header-title">Wheel Covers for Tesla</div>
+    </div>
+
+    <!-- Exterior Color -->
+    <div class="config-section">
+      <div class="section-label">Exterior Color</div>
+      <div class="color-grid" id="colorGrid"></div>
+    </div>
+
+    <!-- Tesla Model -->
+    <div class="config-section size-section">
+      <div class="size-row">
+        <div class="size-row-label">Tesla Model</div>
+        <select id="modelSelect" class="size-select" aria-label="Tesla model">
+          <option value="3">Model 3</option>
+          <option value="Y">Model Y</option>
+          <option value="S">Model S</option>
+          <option value="X">Model X</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Wheel Size -->
+    <div class="config-section size-section">
+      <div class="size-row">
+        <div class="size-row-label">Wheel Size</div>
+        <select id="sizeSelect" class="size-select" aria-label="Wheel size">
+          <option value="20">20"</option>
+          <option value="21">21"</option>
+          <option value="22">22"</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Wheels -->
+    <div class="config-section">
+      <div class="section-label">Wheels</div>
+      <div class="wheel-grid" id="wheelGrid"></div>
+      <div class="wheel-selected-label" id="wheelSelectedLabel"></div>
+    </div>
+
+    <!-- Summary -->
+    <div class="config-summary" id="configSummary"></div>
+
+    <!-- CTA -->
+    <div class="panel-cta">
+      <button class="btn-primary">Add to Cart</button>
+      <button class="btn-secondary">Shop Now</button>
+    </div>
+
+    <!-- Payments -->
+    <div class="payments">
+      <div class="payments-grid">
+        <img alt="American Express" src="https://cdn.simpleicons.org/americanexpress/2E77BB">
+        <img alt="Apple Pay"        src="https://cdn.simpleicons.org/applepay/000000">
+        <img alt="Diners Club"      src="https://cdn.simpleicons.org/dinersclub/0079BE">
+        <img alt="Discover"         src="https://cdn.simpleicons.org/discover/FF6000">
+        <img alt="Meta Pay"         src="https://cdn.simpleicons.org/meta/0467DF">
+        <img alt="Google Pay"       src="https://cdn.simpleicons.org/googlepay/4285F4">
+        <img alt="Mastercard"       src="https://cdn.simpleicons.org/mastercard/EB001B">
+        <img alt="PayPal"           src="https://cdn.simpleicons.org/paypal/003087">
+        <img alt="Shop Pay"         src="https://cdn.simpleicons.org/shopify/5A31F4">
+        <img alt="Venmo"            src="https://cdn.simpleicons.org/venmo/008CFF">
+        <img alt="Visa"             src="https://cdn.simpleicons.org/visa/1A1F71">
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="product-desc">
+      <div class="product-desc-title">Description</div>
+      <div class="product-desc-body">
+        Aerodisc is a high-speed wheel cover system engineered for performance. Our closed-face, low-drag profile streamlines airflow around the wheel and meaningfully cuts your drag coefficient — while our patented center-lock structure keeps every disc locked in, from city streets to highway cruising. Installs in 30 seconds. Swappable in every season. Performance and personality, on demand.
+      </div>
+    </div>
+
+    <!-- Accordions -->
+    <div class="accordions" id="accordions">
+      <div class="accordion-item">
+        <button class="accordion-header" type="button">
+          <span>Product Use Disclaimer</span>
+          <span class="chev">▾</span>
+        </button>
+        <div class="accordion-body">
+          <div class="accordion-body-inner">
+            Aerodisc is engineered for standard street and highway use on Tesla OEM wheels.
+            <strong>Not intended for track driving, racing, sustained off-road use, or speeds beyond posted limits.</strong>
+            In a high-impact collision, the outer face is designed to release before transferring force to the structural rim — Aerodisc is a sacrificial accessory layer, not a crash-rated safety component.
+            Final fitment must be verified against your VIN; once installed, a product is deemed accepted as properly fitting.
+            Warranty does not cover normal wear (scratches, paint chipping, road-debris stains) or damage from track / aggressive driving.
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" type="button">
+          <span>Shipping Policy</span>
+          <span class="chev">▾</span>
+        </button>
+        <div class="accordion-body">
+          <div class="accordion-body-inner">
+            Orders ship from our Los Angeles warehouse within 3–5 business days.
+            Domestic ground delivery is free on orders over $1,500; expedited 2-day and
+            overnight options are available at checkout. International orders typically
+            arrive in 8–14 business days. Tracking is emailed once the carrier scans the
+            package.
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <button class="accordion-header" type="button">
+          <span>Returns &amp; Refund Policy</span>
+          <span class="chev">▾</span>
+        </button>
+        <div class="accordion-body">
+          <div class="accordion-body-inner">
+            Unmounted, unmodified wheels in original packaging may be returned within 30
+            days of delivery for a full refund less return shipping. Custom-finished or
+            color-matched orders are final sale. Defects covered by warranty are repaired
+            or replaced at no cost — open a claim with your order number to start the process.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<!-- ░░ LIGHT THEME WRAPPER — scopes all PDP sections to the light token set ░░ -->
+<div class="lite">
+
+<!-- Sticky section nav -->
+<nav class="section-nav" id="sectionNav" aria-label="PDP sections">
+  <div class="section-nav-inner">
+    <div class="nav-brand">
+      <span class="nav-brand-name">Aerodisc</span>
+      <span class="nav-brand-price">From <strong>$299</strong></span>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a class="nav-link" href="#sec-living"      data-target="sec-living">Lifestyle</a>
+      <a class="nav-link" href="#sec-heritage"    data-target="sec-heritage">Heritage</a>
+      <a class="nav-link" href="#sec-watch"       data-target="sec-watch">Watch</a>
+      <a class="nav-link" href="#sec-patent"      data-target="sec-patent">Patented</a>
+      <a class="nav-link" href="#sec-engineering" data-target="sec-engineering">Engineering</a>
+      <a class="nav-link" href="#sec-faq"         data-target="sec-faq">FAQ</a>
+      <a class="nav-link" href="#sec-reviews"     data-target="sec-reviews">Reviews</a>
+    </div>
+    <button class="nav-cta" id="navCta" type="button" aria-label="Add to cart">
+      Add to Cart
+      <span class="nav-cta-arrow" aria-hidden="true"></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     PDP SECTIONS — 7 conventional blocks
+     ════════════════════════════════════════════════════════════════════ -->
+
+<!-- §1 Features grid + quote -->
+<section class="pdp">
+  <div class="pdp-inner reveal">
+    <div class="bento">
+      <div class="bento-tile t-aero">
+        <img src="public/fluid.jpg" alt="Airflow over the Aerodisc closed face" loading="lazy">
+        <div class="bento-body">
+          <div class="bento-eyebrow">Aerodynamics</div>
+          <div class="bento-num"><span class="count" data-to="0.03" data-decimals="2" data-prefix="−">−0.00</span> <sup>Cd</sup></div>
+          <div class="bento-desc">Closed-face profile streamlines airflow around the wheel.</div>
+        </div>
+      </div>
+      <div class="bento-tile t-protect">
+        <img src="public/protect.jpg" alt="360° rim protection" loading="lazy">
+        <div class="bento-body">
+          <div class="bento-eyebrow">Protection</div>
+          <div class="bento-num"><span class="count" data-to="360" data-decimals="0">0</span>°</div>
+          <div class="bento-desc">A sacrificial barrier against curb rash, salt, and gravel.</div>
+        </div>
+      </div>
+      <div class="bento-tile t-install">
+        <img src="public/install.jpg" alt="30-second snap-on install" loading="lazy">
+        <div class="bento-body">
+          <div class="bento-eyebrow">Install</div>
+          <div class="bento-num"><span class="count" data-to="30" data-decimals="0">0</span> <sup>sec</sup></div>
+          <div class="bento-desc">No tools, no shop visit.</div>
+        </div>
+      </div>
+      <div class="bento-tile t-patent">
+        <img src="public/material.jpg" alt="Patented center-lock engineering" loading="lazy">
+        <div class="bento-body">
+          <div class="bento-eyebrow">Patented</div>
+          <div class="bento-num sm">US 11,XXX</div>
+          <div class="bento-desc">The only patent-protected retention system.</div>
+        </div>
+      </div>
+    </div>
+    <blockquote class="feat-quote">
+      <p>"Closed wheel covers are mandated across every Formula 1 grid since 2022 — to reduce turbulence and increase overtaking. Aerodisc is the same engineering, built for your driveway."</p>
+      <cite>FIA Technical Regulations · Article 10.3 (2022)</cite>
+    </blockquote>
+  </div>
+</section>
+
+
+<!-- §FS Fullscreen hero — Performance & Efficiency -->
+<section class="fs-hero" id="sec-intro">
+  <img class="fs-hero-img" src="public/wind.jpg" alt="Airflow visualization around a closed-face Aerodisc wheel">
+  <span class="fs-hero-brand">Aerodisc</span>
+  <div class="fs-hero-content reveal">
+    <div class="fs-hero-eyebrow">Performance &amp; Efficiency</div>
+    <h2 class="fs-hero-title">Less Drag.<br>More Range.</h2>
+    <p class="fs-hero-body">A closed-face profile streamlines airflow around the wheel, smoothing the turbulence that exposed spokes create. The result: up to <strong>10% more range</strong> per trip, a smoother ride at speed, and a noticeably quieter cabin — even in crosswinds.</p>
+    <p class="fs-hero-disclaimer">Up to 10% range saving observed in specific high-speed crosswind conditions. Real-world results vary with speed, yaw angle, tires, and road surface.</p>
+  </div>
+</section>
+
+<!-- §3.5 Lifestyle slider -->
+<section class="pdp" id="sec-living">
+  <div class="pdp-inner section-head reveal">
+    <div class="pdp-eyebrow">Why Aerodisc</div>
+    <h2 class="pdp-title">Engineered to Outlast the Road.</h2>
+    <p class="pdp-lead">A wheel cover rated for the track, not just the street — protecting what's underneath, hiding what's already there, fitting every Tesla you can drive home, and built from materials that take the worst the road can throw at them.</p>
+  </div>
+
+  <div class="pdp-inner ss" id="lifeScrolly">
+    <div class="ss-media">
+      <div class="ss-stack">
+        <img class="ss-img active" data-i="0" src="public/game.jpg" alt="Track-rated: stays locked at competition speed" loading="lazy">
+        <img class="ss-img" data-i="1" src="public/protect.jpg" alt="360° protection for the OEM rim" loading="lazy">
+        <img class="ss-img" data-i="2" src="public/bruise.jpg" alt="Cover curb rash and existing rim damage" loading="lazy">
+        <img class="ss-img" data-i="3" src="public/fit-wheels.jpg" alt="Fits every Tesla wheel" loading="lazy">
+        <img class="ss-img" data-i="4" src="public/material.jpg" alt="Aerospace-grade ABS + PC composite" loading="lazy">
+      </div>
+    </div>
+    <div class="ss-steps">
+      <div class="ss-step" data-i="0">
+        <img class="ss-step-img" src="public/game.jpg" alt="Track-rated: stays locked at competition speed" loading="lazy">
+        <div class="ss-index">01</div>
+        <h3 class="ss-title">Rated for the Track.</h3>
+        <p class="ss-body">Where others cap out at street speed, Aerodisc keeps going. The patented center-lock clamps the cover to the hub itself — so it stays planted through hard cornering, heavy braking, and sustained high-speed running. Take it to the circuit, not just the commute.</p>
+      </div>
+      <div class="ss-step" data-i="1">
+        <img class="ss-step-img" src="public/protect.jpg" alt="360° protection for the OEM rim" loading="lazy">
+        <div class="ss-index">02</div>
+        <h3 class="ss-title">360° Rim Protection.</h3>
+        <p class="ss-body">A continuous outer ring wraps the rim's most vulnerable edge — taking curb strikes, parking-lot scrapes, gravel, and road salt so your OEM finish never does. The cover is the sacrificial layer; the wheel stays factory-fresh.</p>
+      </div>
+      <div class="ss-step" data-i="2">
+        <img class="ss-step-img" src="public/bruise.jpg" alt="Cover curb rash and existing rim damage" loading="lazy">
+        <div class="ss-index">03</div>
+        <h3 class="ss-title">Hide What's Already There.</h3>
+        <p class="ss-body">Already curbed your rim? Aerodisc covers existing scratches, chips, and corrosion in seconds — no refinish shop, no $400 repair, no waiting on parts. From the day it snaps on, the wheel looks new again.</p>
+      </div>
+      <div class="ss-step" data-i="3">
+        <img class="ss-step-img" src="public/fit-wheels.jpg" alt="Fits every Tesla wheel" loading="lazy">
+        <div class="ss-index">04</div>
+        <h3 class="ss-title">Fits Every Tesla.</h3>
+        <p class="ss-body">Engineered for Model 3, Model Y, Model S, and Model X — across 18", 19", 20", and 21" OEM wheels. One product line, validated against every factory rim Tesla ships, with a precise center-bore match (51–52 mm) for a flush, factory-tight fit.</p>
+      </div>
+      <div class="ss-step" data-i="4">
+        <img class="ss-step-img" src="public/material.jpg" alt="Aerospace-grade ABS + PC composite" loading="lazy">
+        <div class="ss-index">05</div>
+        <h3 class="ss-title">Built from the Right Stuff.</h3>
+        <p class="ss-body">High-impact <strong>ABS + PC composite</strong> with a UV-stabilized matte coating — the same material class used for automotive bumpers. Rated <strong>−40 °F to +120 °F</strong>, pressure-wash safe, and color-fast under direct sun.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §PAT Patented Locking -->
+<section class="patent-section" id="sec-patent">
+  <div class="patent-grid reveal">
+    <div class="patent-figure">
+      <img src="public/wheel-1.png" alt="Patented center-lock retention mechanism" loading="lazy">
+      <div class="patent-seal"><strong>USPTO</strong><span>Protected</span></div>
+    </div>
+    <div class="patent-text">
+      <div class="patent-badge">Patented · Protected</div>
+      <h2 class="pdp-title">Patented Locking Technology</h2>
+      <div class="patent-num">US 11,XXX,XXX</div>
+      <p class="patent-quote">Others rely on generic clips. We rely on patented engineering — the only patent-protected wheel cover retention system on the market. <em>Owner-only removal. Rock-solid at every speed. Backed by USPTO.</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- §PINNED-H Aerodynamics + Install — page-scroll pins, content slides horizontally -->
+<section class="eng-section" id="sec-engineering">
+  <div class="eng-wrap">
+    <!-- Aero: head + centered CFD figure + 3-column points -->
+    <div class="eng-head reveal">
+      <div class="eng-eyebrow">Aerodynamics</div>
+      <h2 class="eng-title">Less Turbulence.<br>Less Drag.</h2>
+      <p class="eng-sub">CFD comparison: Aerodisc vs. exposed wheels.</p>
+    </div>
+    <figure class="eng-figure reveal">
+      <img src="public/turbulence.jpg" alt="CFD comparison — Aerodisc closed face vs. exposed wheel airflow" loading="lazy">
+      <figcaption class="eng-figtag">CFD · Airflow comparison</figcaption>
+      <span class="eng-figcap left">Exposed wheels — turbulent wake, higher drag</span>
+      <span class="eng-figcap right">With Aerodisc — up to <strong>10% energy saved</strong></span>
+    </figure>
+    <div class="eng-points">
+      <div class="eng-point reveal"><span>01</span><p>Smooth, closed face <strong>calms wheel-well turbulence</strong>.</p></div>
+      <div class="eng-point reveal"><span>02</span><p>Tighter rear wake <strong>lowers overall drag</strong>.</p></div>
+      <div class="eng-point reveal"><span>03</span><p>At speed: <strong>better efficiency and stability</strong>.</p></div>
+    </div>
+    <p class="eng-note">Note: Up to 10% saving in specific high-speed crosswinds; results vary by speed, yaw, tires, road.</p>
+
+    <!-- Install: image + numbered steps -->
+    <div class="eng-install reveal">
+      <div class="eng-install-media">
+        <img src="public/install.jpg" alt="Aerodisc snap-on install in 30 seconds" loading="lazy">
+      </div>
+      <div class="eng-install-body">
+        <div class="eng-eyebrow">Installation</div>
+        <h2 class="eng-title">Snap On.<br>30 Seconds.</h2>
+        <ol class="eng-steps">
+          <li><span class="eng-step-n">01</span><div><strong>Align the cover.</strong> Line up the center-lock over the hub — no lugs removed.</div></li>
+          <li><span class="eng-step-n">02</span><div><strong>Press once.</strong> An audible click confirms the lock; no tools, no scratched OEM paint.</div></li>
+          <li><span class="eng-step-n">03</span><div><strong>Drive.</strong> Owner-only release with the keyed center-lock tool (included).</div></li>
+        </ol>
+        <p class="eng-note">Recommended to remove before tire inflation or rotation; reinstall takes the same 30 seconds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §BOX What's in the Box -->
+<section class="pdp" id="sec-box">
+  <div class="pdp-inner section-head reveal">
+    <div class="pdp-eyebrow">What's in the Box</div>
+    <h2 class="pdp-title">One Box. Everything You Need.</h2>
+    <p class="pdp-lead">A complete install kit — wheel covers, retention hardware, the keyed tool only the owner gets, and the protective gear that keeps your rim factory-fresh from the very first turn.</p>
+  </div>
+  <div class="pdp-inner reveal">
+    <div class="box-grid">
+      <div class="box-item">
+        <div class="box-num">01</div>
+        <div class="box-item-img"><img src="public/tool-1.png" alt="Aerodisc wheel cover"></div>
+        <div class="box-item-qty">Qty 4</div>
+        <div class="box-item-name">Aerodisc Wheel Cover</div>
+      </div>
+      <div class="box-item">
+        <div class="box-num">02</div>
+        <div class="box-item-img"><img src="public/tool-2.png" alt="Center-lock retention ring"></div>
+        <div class="box-item-qty">Qty 4</div>
+        <div class="box-item-name">Center-Lock Retention Ring</div>
+      </div>
+      <div class="box-item">
+        <div class="box-num">03</div>
+        <div class="box-item-img"><img src="public/tool-3.png" alt="Hub insert vehicle-specific"></div>
+        <div class="box-item-qty">Qty 4</div>
+        <div class="box-item-name">Hub Insert (Vehicle-Specific)</div>
+      </div>
+      <div class="box-item">
+        <div class="box-num">04</div>
+        <div class="box-item-img"><img src="public/tool-4.png" alt="Patented center-lock tool"></div>
+        <div class="box-item-qty">Qty 1</div>
+        <div class="box-item-name">Patented Center-Lock Tool</div>
+      </div>
+      <div class="box-item">
+        <div class="box-num">05</div>
+        <div class="box-item-img"><img src="public/tool-5.png" alt="Quarter-inch hex key"></div>
+        <div class="box-item-qty">Qty 1</div>
+        <div class="box-item-name">1/4″ Hex Key</div>
+      </div>
+      <div class="box-item">
+        <div class="box-num">06</div>
+        <div class="box-item-img"><img src="public/tool-6.png" alt="Removal hook"></div>
+        <div class="box-item-qty">Qty 1</div>
+        <div class="box-item-name">Removal Hook</div>
+      </div>
+      <div class="box-item">
+        <div class="box-num">07</div>
+        <div class="box-item-img"><img src="public/tool-7.png" alt="Anti-slip install gloves"></div>
+        <div class="box-item-qty">Qty 1 pair</div>
+        <div class="box-item-name">Anti-Slip Install Gloves</div>
+      </div>
+      <div class="box-item">
+        <div class="box-num">08</div>
+        <div class="box-item-img"><img src="public/tool-8.png" alt="Rim protective tape"></div>
+        <div class="box-item-qty">Qty 1</div>
+        <div class="box-item-name">Rim Protective Tape</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §HER Heritage timeline -->
+<section class="pdp" id="sec-heritage">
+  <div class="pdp-inner section-head reveal">
+    <div class="pdp-eyebrow">Heritage</div>
+    <h2 class="pdp-title">100 Years of Closed Wheels.</h2>
+    <p class="pdp-lead">From the 1924 Bugatti center-lock that won Le Mans to the 2022 FIA mandate that put closed wheels back on every Formula 1 grid — the story Aerodisc inherits.</p>
+  </div>
+  <div class="heritage-timeline reveal">
+    <div class="tl-item">
+      <span class="tl-dot" aria-hidden="true"></span>
+      <div class="tl-year">1924</div>
+      <div class="tl-card">
+        <div class="tl-title">Bugatti Type 35</div>
+        <div class="tl-body">The first center-lock hub on a racing wheel cuts pit-stop tire changes from five minutes to under one — and wins Le Mans the same season.</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <span class="tl-dot" aria-hidden="true"></span>
+      <div class="tl-year">1936</div>
+      <div class="tl-card">
+        <div class="tl-title">Cadillac &amp; Packard</div>
+        <div class="tl-body">Polished-chrome hubcaps become the first piece of "moving jewelry" on American luxury — a status symbol you could see at a city block away.</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <span class="tl-dot" aria-hidden="true"></span>
+      <div class="tl-year">2022</div>
+      <div class="tl-card">
+        <div class="tl-title">FIA Closed Wheels</div>
+        <div class="tl-body">Formula 1 mandates closed wheel covers across all teams — a regulatory acknowledgment that closing the wheel lowers turbulence and increases overtakes.</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <span class="tl-dot" aria-hidden="true"></span>
+      <div class="tl-year">2026</div>
+      <div class="tl-card">
+        <div class="tl-title">Aerodisc Series II</div>
+        <div class="tl-body">The first civilian closed-face wheel cover protected by a USPTO-issued retention patent — and the first with an interchangeable face program for every season.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §WATCH Tabbed YouTube -->
+<section class="pdp" id="sec-watch">
+  <div class="pdp-inner section-head reveal">
+    <div class="pdp-eyebrow">Watch</div>
+    <h2 class="pdp-title">See It in Action.</h2>
+    <p class="pdp-lead">A 60-second installation guide and a deeper review from the creators who put Aerodisc through its first thousand miles.</p>
+  </div>
+  <div class="pdp-inner reveal">
+    <div class="watch-layout">
+      <div class="watch-stage">
+        <div class="watch-frame active" data-watch-panel="install">
+          <iframe src="https://www.youtube.com/embed/ScMzIvxBSi4" title="Aerodisc — Installation Guide" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="watch-frame" data-watch-panel="reviews">
+          <iframe src="https://www.youtube.com/embed/aqz-KE-bpKQ" title="Aerodisc — Creator Review" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </div>
+      <div class="watch-list" role="tablist">
+        <button class="watch-tab active" type="button" role="tab" data-watch="install">
+          <span class="watch-thumb"><img src="https://img.youtube.com/vi/ScMzIvxBSi4/hqdefault.jpg" alt="" loading="lazy"><span class="watch-play"></span></span>
+          <span class="watch-tab-meta">
+            <span class="watch-tab-title">Installation Guide</span>
+            <span class="watch-tab-sub">30-second install, no tools beyond the included kit — one minute per wheel.</span>
+          </span>
+        </button>
+        <button class="watch-tab" type="button" role="tab" data-watch="reviews">
+          <span class="watch-thumb"><img src="https://img.youtube.com/vi/aqz-KE-bpKQ/hqdefault.jpg" alt="" loading="lazy"><span class="watch-play"></span></span>
+          <span class="watch-tab-meta">
+            <span class="watch-tab-title">Influencer Reviews</span>
+            <span class="watch-tab-sub">5,000-mile owner review: drag reduction, cabin noise, retention torque.</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §FAQ -->
+<section class="pdp" id="sec-faq">
+  <div class="faq-split reveal">
+    <div class="faq-aside">
+      <div class="pdp-eyebrow">FAQ</div>
+      <h2 class="pdp-title">Questions, Answered.</h2>
+      <p class="pdp-lead">The most-asked questions about fit, finish, install, and the patent. Tap any row to expand.</p>
+      <div class="faq-figure"><img src="public/t-red.jpeg" alt="Aerodisc fitted on a Tesla" loading="lazy"></div>
+    </div>
+    <div class="faq-list" id="faqList">
+      <div class="faq-item">
+        <button class="faq-q" type="button">Does Aerodisc fit my car?<span class="faq-q-mark">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Aerodisc currently fits Tesla Model 3, Model Y, and Model S. Sizes 18", 19", 20", and 21" are supported with center-lock variants for each. Check the configurator at the top of the page for your exact match.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">Can I keep them on at highway speeds?<span class="faq-q-mark">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Yes — the patented center-lock retention is independently tested to 155 mph and through 10,000+ on-off cycles. Sustained highway cruising is exactly what the system is engineered for.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">Will they damage my OEM wheels?<span class="faq-q-mark">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">No. Aerodisc mounts through the wheel's existing center bore and brake-shield channel — there are no drilled holes, no adhesives, and no contact with painted or anodized surfaces.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">How long does installation take?<span class="faq-q-mark">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">First time, about two minutes per wheel while you get used to the magnetic alignment. After that, 30 seconds per wheel is the norm. No torque wrench, no shop visit required.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">What's the warranty?<span class="faq-q-mark">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Two-year retention warranty (covers the locking hardware) plus a one-time free face replacement if you damage the disc within the first year. Lifetime access to the seasonal swap program.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">Do they work in winter / with snow tires?<span class="faq-q-mark">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Yes. The polymer-aluminum composite is rated to −40 °F and shrugs off road salt. Many owners swap to dedicated winter Aerodisc faces (matte black or arctic camo) when they fit snow tires.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">What are the exact fitment specs?<span class="faq-q-mark">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Center bore 51–52 mm and a minimum horizontal clearance of 35 mm. The hub insert is vehicle-specific — select your model + wheel size in the configurator at the top of the page and we'll ship the matched insert.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">Will it survive a car wash or pressure wash?<span class="faq-q-mark">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Yes. The retention system is sealed and rated for direct high-pressure spray. Automatic and touchless car washes are both safe. No removal needed.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">What if I lose the center-lock tool?<span class="faq-q-mark">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Replacement tools are keyed to your serial number and only ship to the registered owner of record. Order at no charge from your account dashboard — most ship within 48 hours.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">What happens in a serious impact or collision?<span class="faq-q-mark">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">The outer face is engineered to release before transferring force to the structural rim — a crumple-zone behavior that protects the alloy underneath. Aerodisc is not a crash-rated component; it's a sacrificial layer designed to fail predictably so your wheel doesn't.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">Do they fit aftermarket / non-OEM wheels?<span class="faq-q-mark">+</span></button>
+        <div class="faq-a"><div class="faq-a-inner">Not currently. The hub insert is tooled to Tesla OEM bore geometry. Aftermarket wheels vary too widely for safe retention — we're working on a universal kit but won't ship one until it passes the same torque-and-cycle testing as the OEM version.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §UGC TikTok showcase -->
+<section class="ugc-section" id="sec-tiktok">
+  <div class="pdp-inner section-head reveal">
+    <div class="pdp-eyebrow">@aerodisc · TikTok</div>
+    <h2 class="pdp-title">Seen on TikTok.</h2>
+    <p class="pdp-lead">Real owners. Real installs. Scroll the feed to watch how Aerodisc shows up in the wild.</p>
+  </div>
+  <div class="ugc-track reveal" id="ugcTrack">
+    <div class="ugc-card"><img src="public/wheel-1.png" alt=""><span class="ugc-play" aria-hidden="true"></span><div class="ugc-meta"><div class="ugc-handle">@drivenina · 2.4M views</div><div class="ugc-stat">Install · 0:42</div></div></div>
+    <div class="ugc-card"><img src="public/t-red.jpeg" alt=""><span class="ugc-play" aria-hidden="true"></span><div class="ugc-meta"><div class="ugc-handle">@evgarage · 880K views</div><div class="ugc-stat">Drive POV · 0:58</div></div></div>
+    <div class="ugc-card"><img src="public/wheel-5.png" alt=""><span class="ugc-play" aria-hidden="true"></span><div class="ugc-meta"><div class="ugc-handle">@cleanmoto · 1.1M views</div><div class="ugc-stat">Unbox · 1:05</div></div></div>
+    <div class="ugc-card"><img src="public/t-blue.jpeg" alt=""><span class="ugc-play" aria-hidden="true"></span><div class="ugc-meta"><div class="ugc-handle">@maemobility · 540K views</div><div class="ugc-stat">First Impressions · 0:36</div></div></div>
+    <div class="ugc-card"><img src="public/wheel-7.png" alt=""><span class="ugc-play" aria-hidden="true"></span><div class="ugc-meta"><div class="ugc-handle">@torquetalk · 2.0M views</div><div class="ugc-stat">Review · 1:24</div></div></div>
+    <div class="ugc-card"><img src="public/wheel-9.png" alt=""><span class="ugc-play" aria-hidden="true"></span><div class="ugc-meta"><div class="ugc-handle">@auto.aestht · 720K views</div><div class="ugc-stat">Color Swap · 0:48</div></div></div>
+  </div>
+</section>
+
+<!-- §RVW Reviews -->
+<section class="pdp" id="sec-reviews">
+  <div class="pdp-inner section-head reveal">
+    <div class="pdp-eyebrow">Reviews</div>
+    <h2 class="pdp-title">What Owners Are Saying.</h2>
+    <p class="pdp-lead">Verified buyers across thirty-eight countries — pulled from the Aerodisc owner program.</p>
+  </div>
+  <div class="rvw-layout reveal">
+    <div class="rvw-summary">
+      <div class="rvw-score-num">4.8</div>
+      <div class="rvw-stars">★★★★★</div>
+      <div class="rvw-count">Based on 2,341 reviews</div>
+      <div class="rvw-bars">
+        <div class="rvw-bar"><span class="rvw-bar-label">5★</span><span class="rvw-bar-track"><span class="rvw-bar-fill" style="width:82%"></span></span><span class="rvw-bar-pct">82%</span></div>
+        <div class="rvw-bar"><span class="rvw-bar-label">4★</span><span class="rvw-bar-track"><span class="rvw-bar-fill" style="width:12%"></span></span><span class="rvw-bar-pct">12%</span></div>
+        <div class="rvw-bar"><span class="rvw-bar-label">3★</span><span class="rvw-bar-track"><span class="rvw-bar-fill" style="width:4%"></span></span><span class="rvw-bar-pct">4%</span></div>
+        <div class="rvw-bar"><span class="rvw-bar-label">2★</span><span class="rvw-bar-track"><span class="rvw-bar-fill" style="width:1%"></span></span><span class="rvw-bar-pct">1%</span></div>
+        <div class="rvw-bar"><span class="rvw-bar-label">1★</span><span class="rvw-bar-track"><span class="rvw-bar-fill" style="width:1%"></span></span><span class="rvw-bar-pct">1%</span></div>
+      </div>
+    </div>
+    <div class="rvw-scroll">
+      <div class="rvw-card">
+        <div class="rvw-card-photo"><img src="public/t-red.jpeg" alt="Owner photo — red Tesla with Aerodisc" loading="lazy"></div>
+        <div class="rvw-card-inner">
+          <div class="rvw-card-stars">★★★★★</div>
+          <div class="rvw-card-title">Quieter than expected.</div>
+          <p class="rvw-card-body">Took it from my driveway straight to the highway. Cabin noise drop is real — and the install was honestly under a minute per wheel.</p>
+          <div class="rvw-card-author">Marcus L. <span class="rvw-verified">Verified Owner</span></div>
+        </div>
+      </div>
+      <div class="rvw-card">
+        <div class="rvw-card-photo"><img src="public/wheel-1.png" alt="Owner photo — Crimson Vortex finish" loading="lazy"></div>
+        <div class="rvw-card-inner">
+          <div class="rvw-card-stars">★★★★★</div>
+          <div class="rvw-card-title">Best $300 mod I've made.</div>
+          <p class="rvw-card-body">Range bumped about 8% on my daily commute. Got more compliments in a week than my entire ownership.</p>
+          <div class="rvw-card-author">Priya N. <span class="rvw-verified">Verified Owner</span></div>
+        </div>
+      </div>
+      <div class="rvw-card">
+        <div class="rvw-card-photo"><img src="public/t-white.jpeg" alt="Owner photo — white Tesla with Aerodisc" loading="lazy"></div>
+        <div class="rvw-card-inner">
+          <div class="rvw-card-stars">★★★★☆</div>
+          <div class="rvw-card-title">Beautiful, watch your wheels.</div>
+          <p class="rvw-card-body">Took me two tries on the first wheel to align. Once you've done one, the rest go in 30 seconds. Finish quality is top-tier.</p>
+          <div class="rvw-card-author">Daniel K. <span class="rvw-verified">Verified Owner</span></div>
+        </div>
+      </div>
+      <div class="rvw-card">
+        <div class="rvw-card-photo"><img src="public/game.jpg" alt="Owner photo — Aerodisc on track" loading="lazy"></div>
+        <div class="rvw-card-inner">
+          <div class="rvw-card-stars">★★★★★</div>
+          <div class="rvw-card-title">Held up on track day.</div>
+          <p class="rvw-card-body">Ran a full track day and they never budged — not a single rattle. The center-lock is the real deal, exactly as advertised.</p>
+          <div class="rvw-card-author">Sofia R. <span class="rvw-verified">Verified Owner</span></div>
+        </div>
+      </div>
+      <div class="rvw-card">
+        <div class="rvw-card-photo"><img src="public/t-blue.jpeg" alt="Owner photo — blue Tesla with Aerodisc" loading="lazy"></div>
+        <div class="rvw-card-inner">
+          <div class="rvw-card-stars">★★★★★</div>
+          <div class="rvw-card-title">Looks factory, better.</div>
+          <p class="rvw-card-body">People think it's a Tesla performance option. Swapped to the blue face for summer in under five minutes. Zero regrets.</p>
+          <div class="rvw-card-author">James T. <span class="rvw-verified">Verified Owner</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §RECO Recommendations -->
+<section class="pdp" id="sec-reco">
+  <div class="pdp-inner section-head reveal">
+    <div class="pdp-eyebrow">Pair With</div>
+    <h2 class="pdp-title">Also Recommended.</h2>
+    <p class="pdp-lead">Other Aerodisc accessories that complement the wheel covers. All ship from the same facility, all backed by the same warranty.</p>
+  </div>
+  <div class="pdp-inner reveal">
+    <div class="reco-grid">
+      <div class="reco-card">
+        <div class="reco-card-img"><img src="public/wheel-2.png" alt="Center Cap Set" loading="lazy"><button class="reco-quickadd" type="button">Add — $49</button></div>
+        <div class="reco-card-body">
+          <div class="reco-card-eyebrow">Accessory</div>
+          <div class="reco-card-name">Center Cap Set</div>
+          <div class="reco-card-meta"><span class="reco-card-price">$49</span><span class="reco-card-stars">★★★★★</span></div>
+        </div>
+      </div>
+      <div class="reco-card">
+        <div class="reco-card-img"><img src="public/wheel-4.png" alt="Spare Face — Hex Carbon" loading="lazy"><button class="reco-quickadd" type="button">Add — $129</button></div>
+        <div class="reco-card-body">
+          <div class="reco-card-eyebrow">Replacement</div>
+          <div class="reco-card-name">Spare Face — Hex Carbon</div>
+          <div class="reco-card-meta"><span class="reco-card-price">$129</span><span class="reco-card-stars">★★★★★</span></div>
+        </div>
+      </div>
+      <div class="reco-card">
+        <div class="reco-card-img"><img src="public/wheel-6.png" alt="Seasonal Swap subscription" loading="lazy"><button class="reco-quickadd" type="button">Subscribe — $348/yr</button></div>
+        <div class="reco-card-body">
+          <div class="reco-card-eyebrow">Subscription</div>
+          <div class="reco-card-name">Seasonal Swap · Year</div>
+          <div class="reco-card-meta"><span class="reco-card-price">$348/yr</span><span class="reco-card-stars">★★★★☆</span></div>
+        </div>
+      </div>
+      <div class="reco-card">
+        <div class="reco-card-img"><img src="public/wheel-8.png" alt="Aerodisc Detail Kit" loading="lazy"><button class="reco-quickadd" type="button">Add — $39</button></div>
+        <div class="reco-card-body">
+          <div class="reco-card-eyebrow">Care</div>
+          <div class="reco-card-name">Aerodisc Detail Kit</div>
+          <div class="reco-card-meta"><span class="reco-card-price">$39</span><span class="reco-card-stars">★★★★★</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §FOOT -->
+<footer class="foot" id="sec-footer">
+  <div class="foot-grid">
+    <div>
+      <div class="foot-brand-name">Aerodisc</div>
+      <p class="foot-brand-desc">Patented closed-face wheel covers engineered for quieter cabins, longer range, and a different wheel every season.</p>
+      <form class="foot-newsletter" onsubmit="event.preventDefault();this.querySelector('button').textContent='Subscribed';">
+        <input type="email" placeholder="Email for occasional drops" aria-label="Email">
+        <button type="submit">Subscribe</button>
+      </form>
+    </div>
+    <div class="foot-col">
+      <div class="foot-col-title">Shop</div>
+      <ul>
+        <li><a href="#">Configurator</a></li>
+        <li><a href="#">All Designs</a></li>
+        <li><a href="#">Accessories</a></li>
+        <li><a href="#">Gift Card</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <div class="foot-col-title">Support</div>
+      <ul>
+        <li><a href="#">Installation Guide</a></li>
+        <li><a href="#">Fitment Lookup</a></li>
+        <li><a href="#">Warranty</a></li>
+        <li><a href="#">Returns</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <div class="foot-col-title">Company</div>
+      <ul>
+        <li><a href="#">Our Story</a></li>
+        <li><a href="#">The Patent</a></li>
+        <li><a href="#">Press</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <div>© 2026 Aerodisc · All Rights Reserved</div>
+    <div class="foot-social">
+      <a href="#" aria-label="Instagram">IG</a>
+      <a href="#" aria-label="TikTok">TT</a>
+      <a href="#" aria-label="YouTube">YT</a>
+      <a href="#" aria-label="X">X</a>
+    </div>
+    <div class="foot-legal">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Cookies</a>
+    </div>
+  </div>
+</footer>
+
+</div><!-- /.lite -->
+
+
+<script>
+// ── Config Data ──────────────────────────────────────────────────────────────
+
+const COLORS = [
+  {
+    id: "0Q",
+    name: "Chalk",
+    type: "Solid",
+    hex: "#E4E0D5",
+    metallic: false,
+    price: 0,
+    img: "public/t-white.jpeg"
+  },
+  {
+    id: "G1",
+    name: "Guards Red",
+    type: "Solid",
+    hex: "#B8001F",
+    metallic: false,
+    price: 0,
+    img: "public/t-red.jpeg"
+  },
+  {
+    id: "45",
+    name: "Gentian Blue",
+    type: "Metallic",
+    hex: "#1C3D6E",
+    metallic: true,
+    price: 820,
+    img: "public/t-blue.jpeg"
+  },
+  {
+    id: "A1",
+    name: "Black",
+    type: "Solid",
+    hex: "#0A0A0A",
+    metallic: false,
+    price: 0
+  }
+];
+
+const WHEELS = [
+  { id: "w1",  sku: "HCN-1001", name: "Crimson Vortex",  size: 20, price:  299, thumb: "public/wheel-1.png" },
+  { id: "w2",  sku: "HCN-1002", name: "Stealth Rotor",   size: 20, price:  299, thumb: "public/wheel-2.png" },
+  { id: "w3",  sku: "HCN-1003", name: "Arctic Camo",     size: 20, price:  329, thumb: "public/wheel-3.png" },
+  { id: "w4",  sku: "HCN-1004", name: "Hex Carbon",      size: 21, price:  349, thumb: "public/wheel-4.png" },
+  { id: "w5",  sku: "HCN-1005", name: "Solar Flare",     size: 21, price:  349, thumb: "public/wheel-5.png" },
+  { id: "w6",  sku: "HCN-1006", name: "Crimson Web",     size: 21, price:  369, thumb: "public/wheel-6.png" },
+  { id: "w7",  sku: "HCN-1007", name: "Onyx Stealth",    size: 22, price:  389, thumb: "public/wheel-7.png" },
+  { id: "w8",  sku: "HCN-1008", name: "Apex Striker",    size: 22, price:  389, thumb: "public/wheel-8.png" },
+  { id: "w9",  sku: "HCN-1009", name: "Inferno Halo",    size: 22, price:  399, thumb: "public/wheel-9.png" },
+  { id: "w10", sku: "HCN-1010", name: "Nebula Drift",    size: 20, price:  299, thumb: "public/wheel-10.png" },
+  { id: "w11", sku: "HCN-1011", name: "Polar Vortex",    size: 20, price:  299, thumb: "public/wheel-11.png" },
+  { id: "w12", sku: "HCN-1012", name: "Lunar Halo",      size: 20, price:  309, thumb: "public/wheel-12.png" },
+  { id: "w13", sku: "HCN-1013", name: "Magnetic Pulse",  size: 20, price:  319, thumb: "public/wheel-13.png" },
+  { id: "w14", sku: "HCN-1014", name: "Cosmic Veil",     size: 21, price:  329, thumb: "public/wheel-14.png" },
+  { id: "w15", sku: "HCN-1015", name: "Iron Lattice",    size: 21, price:  339, thumb: "public/wheel-15.png" },
+  { id: "w16", sku: "HCN-1016", name: "Ember Flux",      size: 21, price:  349, thumb: "public/wheel-16.png" },
+  { id: "w17", sku: "HCN-1017", name: "Quantum Mesh",    size: 21, price:  349, thumb: "public/wheel-17.png" },
+  { id: "w18", sku: "HCN-1018", name: "Shadow Cipher",   size: 21, price:  359, thumb: "public/wheel-18.png" },
+  { id: "w19", sku: "HCN-1019", name: "Phantom Edge",    size: 21, price:  359, thumb: "public/wheel-19.png" },
+  { id: "w20", sku: "HCN-1020", name: "Aurora Spin",     size: 22, price:  369, thumb: "public/wheel-20.png" },
+  { id: "w21", sku: "HCN-1021", name: "Titanium Reef",   size: 22, price:  369, thumb: "public/wheel-21.png" },
+  { id: "w22", sku: "HCN-1022", name: "Velocity Forge",  size: 22, price:  379, thumb: "public/wheel-22.png" },
+  { id: "w23", sku: "HCN-1023", name: "Eclipse Halo",    size: 22, price:  379, thumb: "public/wheel-23.png" },
+  { id: "w24", sku: "HCN-1024", name: "Crimson Tide",    size: 22, price:  389, thumb: "public/wheel-24.png" },
+  { id: "w25", sku: "HCN-1025", name: "Obsidian Wave",   size: 22, price:  389, thumb: "public/wheel-25.png" },
+  { id: "w26", sku: "HCN-1026", name: "Galactic Spire",  size: 22, price:  399, thumb: "public/wheel-26.png" },
+  { id: "w27", sku: "HCN-1027", name: "Solar Eclipse",   size: 22, price:  399, thumb: "public/wheel-27.png" },
+  { id: "w28", sku: "HCN-1028", name: "Tempest Coil",    size: 22, price:  409, thumb: "public/wheel-28.png" },
+  { id: "w29", sku: "HCN-1029", name: "Midnight Forge",  size: 22, price:  419, thumb: "public/wheel-29.png" },
+  { id: "w30", sku: "HCN-1030", name: "Apex Reactor",    size: 22, price:  429, thumb: "public/wheel-30.png" }
+];
+
+// ── State ────────────────────────────────────────────────────────────────────
+
+const SIDE_PERSP_ID = "ext-low-side-left";
+
+const state = {
+  color: "0Q",
+  wheel: null,
+  size: 20,
+  persp: SIDE_PERSP_ID
+};
+
+// Preloaded Image cache
+const imgCache = {};
+
+// ── DOM refs ─────────────────────────────────────────────────────────────────
+
+const carStage = document.getElementById("carStage");
+const stageLoading = document.getElementById("stageLoading");
+const colorGrid = document.getElementById("colorGrid");
+const wheelGrid = document.getElementById("wheelGrid");
+const configSummary = document.getElementById("configSummary");
+
+// ── Build color grid ─────────────────────────────────────────────────────────
+
+COLORS.forEach(c => {
+  const opt = document.createElement("div");
+  opt.className = "color-option" + (c.id === state.color ? " active" : "");
+  opt.dataset.id = c.id;
+  opt.innerHTML = `
+    <div class="color-swatch${c.metallic ? " metallic" : ""}" style="background:${c.hex}"></div>
+    <div class="color-info">
+      <div class="color-name">${c.name}</div>
+    </div>
+    <div class="color-check"><div class="color-check-dot"></div></div>
+  `;
+  opt.addEventListener("click", () => {
+    state.color = c.id;
+    document.querySelectorAll(".color-option").forEach(el => el.classList.remove("active"));
+    opt.classList.add("active");
+    showCar();
+    renderSummary();
+  });
+  colorGrid.appendChild(opt);
+});
+
+// ── Build wheel grid ─────────────────────────────────────────────────────────
+
+function renderWheelGrid() {
+  wheelGrid.innerHTML = "";
+  WHEELS.forEach(w => {
+    const opt = document.createElement("div");
+    opt.className = "wheel-option" + (w.id === state.wheel ? " active" : "");
+    opt.dataset.id = w.id;
+    opt.title = `${w.name}${w.price > 0 ? ` · $${w.price.toLocaleString()}` : ""}`;
+
+    opt.innerHTML = `
+      <img class="wheel-thumb" src="${w.thumb}" alt="${w.name}" onerror="this.style.opacity='0'">
+    `;
+
+    opt.addEventListener("click", () => {
+      state.wheel = w.id;
+      document.querySelectorAll(".wheel-option").forEach(el => el.classList.remove("active"));
+      opt.classList.add("active");
+      renderWheelLabel();
+      showCar();
+      renderSummary();
+      updateSpinWheel();
+    });
+    wheelGrid.appendChild(opt);
+  });
+}
+renderWheelGrid();
+
+// Size selector (purely informational — does not filter wheels)
+const sizeSelect = document.getElementById("sizeSelect");
+sizeSelect.value = String(state.size);
+sizeSelect.addEventListener("change", () => {
+  state.size = parseInt(sizeSelect.value, 10);
+});
+
+// Tesla model selector (independent of wheel selection)
+const modelSelect = document.getElementById("modelSelect");
+state.model = modelSelect.value;
+modelSelect.addEventListener("change", () => {
+  state.model = modelSelect.value;
+});
+
+const wheelSelectedLabel = document.getElementById("wheelSelectedLabel");
+function renderWheelLabel() {
+  const w = WHEELS.find(x => x.id === state.wheel);
+  if (!w) {
+    wheelSelectedLabel.innerHTML = `<span class="price">Select a wheel</span>`;
+    return;
+  }
+  wheelSelectedLabel.innerHTML = `
+    ${w.name}<span class="price">${w.price > 0 ? `+$${w.price.toLocaleString()}` : "Included"}</span>
+    <div class="sku">SKU · ${w.sku}</div>
+  `;
+}
+renderWheelLabel();
+
+
+// ── Car image display ─────────────────────────────────────────────────────────
+
+function cacheKey(color, wheel, persp) {
+  return `${color}_${wheel}_${persp}`;
+}
+
+function getOrCreateImg(color, wheel, persp) {
+  const key = cacheKey(color, wheel, persp);
+  if (imgCache[key]) return imgCache[key];
+
+  const colorObj = COLORS.find(c => c.id === color);
+  const img = document.createElement("img");
+  img.className = "car-img";
+  img.alt = `Aerodisc - ${color} - ${wheel}`;
+  if (!colorObj || !colorObj.img) {
+    // No local image for this color (e.g. Black, awaiting asset) — leave stage empty.
+    img.dataset.failed = "1";
+    carStage.appendChild(img);
+    imgCache[key] = img;
+    return img;
+  }
+  img.src = colorObj.img;
+
+  img.onload = () => {
+    // if this is the current config, show it
+    if (key === cacheKey(state.color, state.wheel, state.persp)) {
+      revealCurrent(key);
+    }
+  };
+
+  img.onerror = () => {
+    img.dataset.failed = "1";
+    if (key === cacheKey(state.color, state.wheel, state.persp)) {
+      stageLoading.classList.remove("visible");
+    }
+  };
+
+  carStage.appendChild(img);
+  imgCache[key] = img;
+  return img;
+}
+
+let introActive = true;
+let lastFrameActive = true;
+const lastFrameEl = document.getElementById("introLastFrame");
+
+function dismissLastFrame() {
+  if (!lastFrameActive) return;
+  lastFrameActive = false;
+  lastFrameEl.style.opacity = "0";
+  lastFrameEl.addEventListener("transitionend", () => {
+    lastFrameEl.style.display = "none";
+  }, { once: true });
+}
+
+function revealCurrent(key) {
+  if (introActive) return;
+  dismissLastFrame();   // last-frame 与车图同步淡出/淡入
+  // Hide all
+  Object.entries(imgCache).forEach(([k, img]) => {
+    img.classList.remove("active");
+  });
+  // Show current
+  if (imgCache[key]) {
+    imgCache[key].classList.add("active");
+  }
+  stageLoading.classList.remove("visible");
+}
+
+function showCar() {
+  const { color, wheel, persp } = state;
+  const key = cacheKey(color, wheel, persp);
+
+  const img = getOrCreateImg(color, wheel, persp);
+
+  if (img.complete && !img.dataset.failed) {
+    revealCurrent(key);
+  } else {
+    // show loader, wait for onload
+    stageLoading.classList.add("visible");
+    // hide others immediately
+    Object.entries(imgCache).forEach(([k, i]) => {
+      if (k !== key) i.classList.remove("active");
+    });
+  }
+
+  // Preload adjacent combos
+  preloadNeighbors(color, wheel, persp);
+}
+
+function preloadNeighbors(color, wheel, persp) {
+  COLORS.forEach(c => {
+    WHEELS.forEach(w => {
+      // preload all on current perspective
+      getOrCreateImg(c.id, w.id, persp);
+    });
+  });
+}
+
+// ── Summary ──────────────────────────────────────────────────────────────────
+
+function renderSummary() {
+  const wheel = WHEELS.find(w => w.id === state.wheel);
+  const total = wheel?.price || 0;
+
+  configSummary.innerHTML = `
+    <div class="summary-total">
+      <span class="summary-total-label">Total</span>
+      <span class="summary-total-price">${wheel ? "$" + total.toLocaleString() : "—"}</span>
+    </div>
+  `;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+renderSummary();
+showCar();
+
+// ── Intro video → fade out → show car ────────────────────────────────────────
+
+(function () {
+  const video = document.getElementById("introVideo");
+  if (!video) return;
+
+  function endIntro() {
+    introActive = false;
+    lastFrameEl.style.opacity = "1";  // last-frame 淡入
+    video.classList.add("fade-out");   // 视频同步淡出
+    video.addEventListener("transitionend", () => {
+      video.style.display = "none";
+    }, { once: true });
+  }
+
+  video.addEventListener("ended", endIntro);
+
+  // 视频加载失败 → 直接跳过
+  video.addEventListener("error", () => {
+    introActive = false;
+    video.style.display = "none";
+  });
+})();
+
+// preload all color×wheel combos for the side view in background after a short delay
+setTimeout(() => {
+  COLORS.forEach(c => {
+    WHEELS.forEach(w => {
+      getOrCreateImg(c.id, w.id, SIDE_PERSP_ID);
+    });
+  });
+}, 1500);
+
+// ── Wheel Spin Mode ───────────────────────────────────────────────────────────
+
+const wheelOverlayR  = document.getElementById("wheelOverlayRear");
+const wheelOverlayF  = document.getElementById("wheelOverlayFront");
+const stageEl        = document.querySelector(".stage");
+
+// ── Rear-wheel overlay placement ────────────────────────────────────────────
+// Values are fractions of the underlying car image (1920×1080).
+// Tweak these three numbers to align with the rear wheel:
+//   REAR_CX → horizontal center (0=left edge, 1=right edge)
+//   REAR_CY → vertical   center (0=top,      1=bottom)
+//   REAR_R  → radius (fraction of image HEIGHT)
+const SIDE_RATIO = 1920 / 1080;
+let REAR_CX = 0.68;
+let REAR_CY = 0.57;
+let REAR_R  = 0.068;
+let FRONT_CX = 0.308;
+let FRONT_CY = 0.57;
+let FRONT_R  = 0.068;
+
+// Console tuning helper: tuneWheel(cx, cy, r) — pass any/all, undefined keeps current
+window.tuneWheel = (cx, cy, r) => {
+  if (cx !== undefined) REAR_CX = cx;
+  if (cy !== undefined) REAR_CY = cy;
+  if (r  !== undefined) REAR_R  = r;
+  positionWheelOverlays();
+  console.log(`REAR_CX=${REAR_CX}  REAR_CY=${REAR_CY}  REAR_R=${REAR_R}`);
+};
+window.tuneFrontWheel = (cx, cy, r) => {
+  if (cx !== undefined) FRONT_CX = cx;
+  if (cy !== undefined) FRONT_CY = cy;
+  if (r  !== undefined) FRONT_R  = r;
+  positionWheelOverlays();
+  console.log(`FRONT_CX=${FRONT_CX}  FRONT_CY=${FRONT_CY}  FRONT_R=${FRONT_R}`);
+};
+
+function positionWheelOverlays() {
+  const cw = stageEl.offsetWidth;
+  const ch = stageEl.offsetHeight;
+
+  // Compute rendered image bounds under object-fit:cover
+  let rW, rH, ox, oy;
+  if (cw / ch > SIDE_RATIO) {
+    rW = cw; rH = cw / SIDE_RATIO;
+    ox = 0;  oy = (ch - rH) / 2;
+  } else {
+    rH = ch; rW = ch * SIDE_RATIO;
+    ox = (cw - rW) / 2; oy = 0;
+  }
+
+  const cx = ox + REAR_CX * rW;
+  const cy = oy + REAR_CY * rH;
+  const r  = REAR_R  * rH;
+  wheelOverlayR.style.left   = (cx - r) + "px";
+  wheelOverlayR.style.top    = (cy - r) + "px";
+  wheelOverlayR.style.width  = (r * 2)  + "px";
+  wheelOverlayR.style.height = (r * 2)  + "px";
+
+  const fcx = ox + FRONT_CX * rW;
+  const fcy = oy + FRONT_CY * rH;
+  const fr  = FRONT_R  * rH;
+  wheelOverlayF.style.left   = (fcx - fr) + "px";
+  wheelOverlayF.style.top    = (fcy - fr) + "px";
+  wheelOverlayF.style.width  = (fr * 2)   + "px";
+  wheelOverlayF.style.height = (fr * 2)   + "px";
+}
+
+function updateSpinWheel() {
+  const activeWheel = WHEELS.find(w => w.id === state.wheel);
+  if (!activeWheel) {
+    wheelOverlayR.classList.remove("spinning");
+    wheelOverlayF.classList.remove("visible");
+    wheelOverlayR.src = "";
+    wheelOverlayF.src = "";
+    return;
+  }
+  wheelOverlayR.src = activeWheel.thumb;
+  wheelOverlayF.src = activeWheel.thumb;
+  positionWheelOverlays();
+  wheelOverlayR.classList.add("spinning");
+  wheelOverlayF.classList.add("visible");
+}
+
+// Spin activates when a wheel is selected; switching updates the overlay source
+document.getElementById("wheelGrid").addEventListener("click", updateSpinWheel);
+
+// Reposition on resize (only relevant once a wheel is chosen)
+window.addEventListener("resize", () => {
+  if (state.wheel) positionWheelOverlays();
+});
+
+// ── First-screen scroll routing ─────────────────────────────────────────────
+// When the user is on the first screen and the wheel is over the LEFT stage,
+// forward the scroll to the RIGHT panel until the panel finishes; only then
+// allow the page to advance below. Wheel events that originate over the panel
+// itself are left to the browser (native scrolling + overscroll chaining
+// already does the right thing there).
+(function () {
+  const stage = document.querySelector(".stage");
+  const panel = document.querySelector(".panel");
+  if (!stage || !panel) return;
+
+  stage.addEventListener("wheel", (e) => {
+    // Once the page has scrolled past the first viewport, stop hijacking.
+    if (window.scrollY > 0) return;
+
+    const atBottom = panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 1;
+    const atTop    = panel.scrollTop <= 0;
+
+    if (e.deltaY > 0 && !atBottom) {
+      e.preventDefault();
+      panel.scrollTop += e.deltaY;
+    } else if (e.deltaY < 0 && !atTop) {
+      e.preventDefault();
+      panel.scrollTop += e.deltaY;
+    }
+    // else: let the body scroll naturally (advance to the next section /
+    // already at the very top with panel also at top).
+  }, { passive: false });
+})();
+
+
+// ── Section nav (sticky) ────────────────────────────────────────────────────
+(function () {
+  const nav = document.getElementById("sectionNav");
+  const navLinks = Array.from(document.querySelectorAll(".nav-link"));
+  const navCta = document.getElementById("navCta");
+  if (!nav || !navLinks.length) return;
+
+  navLinks.forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const id = link.dataset.target;
+      const target = document.getElementById(id);
+      if (!target) return;
+      const offset = nav.offsetHeight;
+      const y = target.getBoundingClientRect().top + window.pageYOffset - offset + 1;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    });
+  });
+
+  if (navCta) {
+    navCta.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  const sections = navLinks
+    .map(l => document.getElementById(l.dataset.target))
+    .filter(Boolean);
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(l => l.classList.toggle("active", l.dataset.target === id));
+      }
+    });
+  }, { rootMargin: "-40% 0px -55% 0px", threshold: 0 });
+  sections.forEach(s => io.observe(s));
+})();
+
+// ── FAQ accordion ───────────────────────────────────────────────────────────
+document.querySelectorAll('#faqList .faq-item').forEach(item => {
+  const q = item.querySelector('.faq-q');
+  const a = item.querySelector('.faq-a');
+  if (!q || !a) return;
+  q.addEventListener('click', () => {
+    const isOpen = item.classList.toggle('open');
+    a.style.maxHeight = isOpen ? a.scrollHeight + 'px' : '0';
+  });
+});
+
+// ── Watch tab switcher ──────────────────────────────────────────────────────
+(function () {
+  const tabs   = document.querySelectorAll('.watch-tab');
+  const panels = document.querySelectorAll('.watch-frame');
+  const caps   = document.querySelectorAll('.watch-cap');
+  if (!tabs.length) return;
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const key = tab.dataset.watch;
+      tabs.forEach(t => t.classList.toggle('active', t === tab));
+      panels.forEach(p => p.classList.toggle('active', p.dataset.watchPanel === key));
+      caps.forEach(c => { c.hidden = (c.dataset.watchCap !== key); });
+    });
+  });
+})();
+
+// ── PDP reveal on scroll ────────────────────────────────────────────────────
+(function () {
+  const els = document.querySelectorAll('.reveal');
+  if (!els.length) return;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  els.forEach(el => io.observe(el));
+})();
+
+// ── Lifestyle sticky scrollytelling: crossfade pinned image to active step ──
+(function () {
+  const root = document.getElementById('lifeScrolly');
+  if (!root) return;
+  const imgs  = root.querySelectorAll('.ss-img');
+  const steps = root.querySelectorAll('.ss-step');
+  if (!steps.length) return;
+  const setActive = (i) => imgs.forEach(im => im.classList.toggle('active', +im.dataset.i === i));
+  // A step becomes active when it crosses the vertical centre of the viewport.
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) setActive(+e.target.dataset.i); });
+  }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+  steps.forEach(s => io.observe(s));
+})();
+
+// ── Stagger reveal for repeating content blocks ─────────────────────────────
+(function () {
+  const SELECTOR = [
+    '.bento-tile', '.box-item', '.tl-item', '.faq-item',
+    '.ugc-card', '.rvw-card', '.reco-card'
+  ].join(',');
+  const items = Array.from(document.querySelectorAll(SELECTOR))
+    .filter(el => !el.closest('.stage') && !el.classList.contains('reveal'));
+  if (!items.length) return;
+
+  // Stagger delay by sibling position within each parent (capped).
+  const seen = new Map();
+  items.forEach(el => {
+    const p = el.parentElement;
+    const i = seen.get(p) || 0;
+    seen.set(p, i + 1);
+    el.dataset.rvDelay = Math.min(i, 6) * 70;
+    el.classList.add('rv');
+  });
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      io.unobserve(el);
+      // JS-timed stagger keeps inline transition-delay off the element, so it
+      // never leaks into the card's own hover transitions.
+      setTimeout(() => el.classList.add('in'), +el.dataset.rvDelay || 0);
+    });
+  }, { threshold: 0.12 });
+  items.forEach(el => io.observe(el));
+})();
+
+// ── Feature counter (count-up on scroll) ────────────────────────────────────
+(function () {
+  const counters = document.querySelectorAll('.count');
+  if (!counters.length) return;
+  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+  const animate = (el) => {
+    const to = parseFloat(el.dataset.to || '0');
+    const decimals = parseInt(el.dataset.decimals || '0', 10);
+    const prefix = el.dataset.prefix || '';
+    const suffix = el.dataset.suffix || '';
+    const duration = 1400;
+    const start = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      const v = to * easeOutCubic(t);
+      el.textContent = prefix + v.toFixed(decimals) + suffix;
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animate(e.target);
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.4 });
+  counters.forEach(el => io.observe(el));
+})();
+
+// ── Accordion ───────────────────────────────────────────────────────────────
+document.querySelectorAll("#accordions .accordion-item").forEach(item => {
+  const header = item.querySelector(".accordion-header");
+  const body = item.querySelector(".accordion-body");
+  header.addEventListener("click", () => {
+    const isOpen = item.classList.toggle("open");
+    body.style.maxHeight = isOpen ? body.scrollHeight + "px" : "0";
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aerodisc — Aerodynamic Wheel Covers for Tesla</title>
+  <link rel="icon" type="image/png" href="public/wheel-1.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Archivo+Black&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#faf9f6; --surface:#ffffff; --bg-alt:#f1efea;
+      --text:#16150f; --text-muted:rgba(22,21,15,0.55); --border:rgba(20,18,12,0.12);
+      --red:#D5001C; --red-hover:#b8001b; --chalk:#E8E4D9; --blue:#1C3D6E; --dark:#121212;
+      --transition:400ms cubic-bezier(0.4,0,0.2,1);
+      --maxw:1240px;
+    }
+    html{scroll-behavior:smooth; scroll-padding-top:64px}
+    @media(max-width:480px){html{scroll-padding-top:44px}}
+    body{font-family:'Archivo',sans-serif;font-weight:400;background:var(--bg);color:var(--text);overflow-x:clip;line-height:1.5;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+    img{max-width:100%}
+    h1,h2,h3{font-family:'Archivo Black',sans-serif;text-transform:uppercase;line-height:1.0;letter-spacing:0.01em}
+    .eyebrow{font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:var(--red);font-weight:700}
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+    @media(max-width:480px){.wrap{padding:0 18px}}
+    .btn-primary{display:inline-block;background:var(--red);color:#fff;font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;padding:15px 30px;border:none;border-radius:3px;cursor:pointer;text-decoration:none;transition:background var(--transition),transform 120ms}
+    .btn-primary:hover{background:var(--red-hover)} .btn-primary:active{transform:scale(0.99)}
+    .btn-secondary{display:inline-block;background:transparent;color:var(--text);font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;padding:14px 28px;border:1.5px solid rgba(22,21,15,0.28);border-radius:3px;cursor:pointer;text-decoration:none;transition:border-color var(--transition),background var(--transition)}
+    .btn-secondary:hover{border-color:var(--text);background:rgba(22,21,15,0.04)}
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity 700ms ease,transform 700ms cubic-bezier(0.16,1,0.3,1)}
+    .reveal.in{opacity:1;transform:none}
+    @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+
+    /* ── Nav ── */
+    .nav{position:sticky;top:0;z-index:100;background:rgba(250,249,246,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);transition:box-shadow var(--transition),transform 350ms cubic-bezier(0.4,0,0.2,1)}
+    .nav.-hide{transform:translateY(-100%)}
+    .nav.scrolled{box-shadow:0 6px 24px rgba(0,0,0,0.06)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px}
+    .nav-logo{display:flex;align-items:center;text-decoration:none}
+    .nav-logo img{height:30px;width:auto;display:block}
+    .nav-links{display:flex;gap:28px}
+    .nav-links a{font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);text-decoration:none;transition:color var(--transition)}
+    .nav-links a:hover{color:var(--text)}
+    .nav-item{display:flex;align-items:center}
+    .nav-shop{display:flex;align-items:center;gap:5px;cursor:pointer}
+    .nav-shop::after{content:"";width:5px;height:5px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg) translateY(-1px);transition:transform var(--transition)}
+    .has-mega:hover .nav-shop::after{transform:rotate(-135deg) translateY(-1px)}
+    .mega{position:absolute;left:0;right:0;top:100%;background:var(--bg);border-bottom:1px solid var(--border);box-shadow:0 26px 44px -30px rgba(20,18,12,0.45);opacity:0;visibility:hidden;transform:translateY(-8px);transition:opacity .25s ease,transform .25s ease,visibility .25s;z-index:99}
+    .has-mega:hover .mega,.has-mega:focus-within .mega{opacity:1;visibility:visible;transform:none}
+    .mega-inner{padding:28px 0 34px}
+    .mega-head{font-family:'Archivo Black',sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:0.12em;color:var(--text-muted);margin-bottom:18px}
+    .mega-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:14px}
+    .mega-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px 10px;border:1px solid var(--border);border-radius:12px;background:#fff;text-decoration:none;transition:border-color var(--transition),transform var(--transition),box-shadow var(--transition)}
+    .mega-card:hover{border-color:var(--text);transform:translateY(-3px);box-shadow:0 14px 26px -18px rgba(20,18,12,0.5)}
+    .mega-card img{height:auto;max-height:26px;max-width:90px;object-fit:contain;display:block}
+    .mega-card span{font-family:'Archivo Black',sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:0.03em;color:var(--text)}
+    @media(max-width:980px){.mega-grid{grid-template-columns:repeat(4,1fr)}}
+    .nav-right{display:flex;align-items:center;gap:20px}
+    .nav-ic{position:relative;color:var(--text);display:inline-flex;transition:color var(--transition)}
+    .nav-ic:hover{color:var(--red)}
+    .nav-ic svg{width:21px;height:21px;display:block}
+    .nav-badge{position:absolute;top:-6px;right:-7px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:var(--red);color:#fff;font-size:9px;font-weight:700;line-height:15px;text-align:center}
+    .nav-burger{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text)}
+    @media(max-width:768px){
+      .nav-links{position:fixed;inset:64px 0 auto 0;flex-direction:column;gap:0;background:var(--bg);border-bottom:1px solid var(--border);transform:translateY(-120%);transition:transform var(--transition)}
+      .nav-links.open{transform:none}
+      .nav-links a{padding:16px 24px;border-top:1px solid var(--border)}
+      .nav-item{display:block}
+      .nav-shop::after{display:none}
+      .mega{display:none}
+      .nav-burger{display:block}
+    }
+    @media(max-width:480px){.nav-inner{height:44px}.nav-links{inset:44px 0 auto 0}}
+
+    /* ── Hero ── */
+    .hero{position:absolute;inset:0;height:100%;overflow:hidden;background:#000}
+    /* Scout-style hero reveal: front (video) pinned, scrolls up + darkens, revealing back (Featured) */
+    .hero-stage{position:relative;height:200svh;z-index:0}
+    .hero-pin{position:sticky;top:0;height:100svh;overflow:hidden}
+    .hero-layer{position:absolute;inset:0}
+    .hero-layer.-front{z-index:2;will-change:transform}
+    .hero-layer.-back{z-index:1;background:var(--bg);display:flex;flex-direction:column;justify-content:center}
+    @media(prefers-reduced-motion:reduce){
+      .hero-stage{height:auto}.hero-pin{position:relative;height:auto}
+      .hero-layer.-front{position:relative;height:100svh}
+      .hero-layer.-back{position:relative;height:auto;display:block}
+    }
+    .hero-track{position:absolute;inset:0;transform-origin:50% 42%;will-change:transform}
+    .hero-dim{position:absolute;inset:0;background:#000;opacity:0;z-index:2;pointer-events:none}
+    .slide{position:absolute;inset:0;opacity:0;transition:opacity 900ms ease;pointer-events:none}
+    .slide.active{opacity:1;pointer-events:auto}
+    .hero-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .hero-scrim{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.6),rgba(0,0,0,0.15) 60%),linear-gradient(0deg,rgba(0,0,0,0.45),transparent 50%)}
+    .hero-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:18px;color:#fff}
+    .hero-eb{color:rgba(255,255,255,0.85)}
+    .hero-title{color:#fff;font-size:clamp(44px,8vw,104px)}
+    .hero-sub{font-size:clamp(15px,1.6vw,20px);max-width:34ch;color:rgba(255,255,255,0.9)}
+    .hero-cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+    .hero-btn2{color:#fff;border-color:rgba(255,255,255,0.45)}
+    .hero-btn2:hover{background:rgba(255,255,255,0.1);border-color:#fff}
+    .hero-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:3;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.3);color:#fff;width:46px;height:46px;border-radius:50%;font-size:24px;cursor:pointer;transition:background var(--transition)}
+    .hero-arrow:hover{background:rgba(0,0,0,0.5)} .hero-arrow.left{left:20px}.hero-arrow.right{right:20px}
+    .hero-dots{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);z-index:3;display:flex;gap:9px}
+    .hero-dots button{width:9px;height:9px;border-radius:50%;border:none;background:rgba(255,255,255,0.45);cursor:pointer;padding:0;transition:width var(--transition),background var(--transition)}
+    .hero-dots button.on{width:26px;border-radius:5px;background:var(--red)}
+    .hero-cue{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);z-index:3;color:rgba(255,255,255,0.6);font-size:26px;animation:bob 1.8s ease-in-out infinite}
+    @keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,8px)}}
+    @media(max-width:768px){.hero-arrow{display:none}.hero-cue{bottom:48px}}
+    @media(prefers-reduced-motion:reduce){.hero-cue{animation:none}.slide{transition:none}}
+
+    /* ── Stats ── */
+    .stats{padding:84px 0;background:var(--bg)}
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:30px;margin-top:30px}
+    .stat-num{font-family:'Archivo Black',sans-serif;font-size:clamp(40px,5vw,68px);color:var(--text);line-height:1}
+    .stat-lbl{margin-top:10px;font-size:13px;color:var(--text-muted);letter-spacing:0.02em}
+    .stat-foot{margin-top:34px;font-size:11px;color:var(--text-muted);opacity:0.8}
+    @media(max-width:768px){.stat-grid{grid-template-columns:repeat(2,1fr);gap:30px 20px}}
+
+    /* ── Marquee ── */
+    .marquee{background:var(--bg-alt);border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;padding:16px 0}
+    .marquee-track{display:flex;width:max-content;animation:scroll-x 28s linear infinite}
+    .marquee-track span{font-family:'Archivo Black',sans-serif;font-size:15px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text);white-space:nowrap}
+    .marquee-track .dot{color:var(--red)}
+    @keyframes scroll-x{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    @media(prefers-reduced-motion:reduce){.marquee-track{animation:none}}
+
+    /* ── Product ── */
+    .product{padding:96px 0;background:var(--bg-alt)}
+    .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+    .product-media{background:radial-gradient(circle at 50% 45%,#fff,#e7e6e0);border-radius:14px;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .product-media img{width:82%;height:82%;object-fit:contain;transition:opacity var(--transition)}
+    .product-title{font-size:clamp(34px,4.4vw,60px);margin-bottom:18px}
+    .product-body{color:var(--text-muted);max-width:46ch;margin-bottom:20px}
+    .product-ticks{list-style:none;margin-bottom:24px}
+    .product-ticks li{padding-left:26px;position:relative;margin-bottom:10px;font-size:15px}
+    .product-ticks li::before{content:"\2713";position:absolute;left:0;color:var(--red);font-weight:700}
+    .swatches{display:flex;gap:12px;margin-bottom:26px}
+    .sw{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.18);cursor:pointer;outline:2px solid transparent;outline-offset:2px;transition:outline-color var(--transition)}
+    .sw.on{outline-color:var(--red)}
+    .product-buy{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+    .product-price{font-size:15px;color:var(--text-muted)} .product-price strong{font-family:'Archivo Black',sans-serif;color:var(--text);font-size:22px}
+    @media(max-width:768px){.product-grid{grid-template-columns:1fr;gap:32px}}
+
+    /* ── Technology ── */
+    .tech{position:relative;background:var(--dark);color:#fff;padding:120px 0;overflow:hidden}
+    .tech-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.4}
+    .tech-scrim{position:absolute;inset:0;background:linear-gradient(90deg,rgba(18,18,18,0.92),rgba(18,18,18,0.4))}
+    .tech-inner{position:relative;z-index:2}
+    .tech-title{font-size:clamp(34px,5vw,72px);color:#fff;margin:14px 0 22px}
+    .tech-body{max-width:46ch;color:rgba(255,255,255,0.8);margin-bottom:34px}
+    .tech-points{display:flex;gap:40px;flex-wrap:wrap;margin-bottom:38px}
+    .tech-pt{font-size:15px;font-weight:600}
+    .tech-pt span{display:block;font-family:'Archivo Black',sans-serif;font-size:22px;color:var(--red);margin-bottom:8px}
+
+    /* ── In the Wild ── */
+    .wild{position:relative;min-height:80vh;display:flex;align-items:flex-end;overflow:hidden}
+    .wild-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .wild-scrim{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,0.7),transparent 60%)}
+    .wild-inner{position:relative;z-index:2;color:#fff;padding:60px 24px}
+    .wild-title{font-size:clamp(34px,5vw,72px);color:#fff;margin:14px 0 18px}
+    .wild-body{max-width:42ch;color:rgba(255,255,255,0.9)}
+    @media(max-width:768px){.tech{padding:80px 0}.tech-points{gap:24px}}
+
+    /* ── Reviews + UGC ── */
+    .reviews{padding:96px 0;background:var(--bg)}
+    .rv-title{font-size:clamp(28px,3.6vw,48px);margin:12px 0 14px}
+    .rv-agg{color:var(--text-muted);margin-bottom:40px} .rv-agg strong{font-family:'Archivo Black',sans-serif;color:var(--text)}
+    .rv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:64px}
+    .rv-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px}
+    .rv-stars{color:var(--red);letter-spacing:2px;margin-bottom:14px}
+    .rv-card blockquote{font-size:17px;line-height:1.5;margin-bottom:16px}
+    .rv-card figcaption{font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em}
+    .ugc-eb{margin-bottom:18px}
+    .ugc-row{display:flex;gap:16px;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+    .ugc-row::-webkit-scrollbar{height:6px}.ugc-row::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+    .ugc-card{position:relative;flex:0 0 auto;width:200px;aspect-ratio:9/16;background:#000;border-radius:12px;overflow:hidden;scroll-snap-align:start}
+    .ugc-card img{width:100%;height:100%;object-fit:cover;opacity:0.85}
+    .ugc-play{position:absolute;inset:0;margin:auto;width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.92);border-radius:50%;color:#16150f;font-size:18px}
+    @media(max-width:768px){.rv-grid{grid-template-columns:1fr;gap:16px;margin-bottom:48px}.ugc-card{width:160px}}
+
+    /* ── Fits Your Tesla ── */
+    .fit{padding:96px 0;background:var(--bg-alt)}
+    .fit-title{font-size:clamp(28px,3.6vw,48px);margin:12px 0 14px}
+    .fit-sub{color:var(--text-muted);margin-bottom:44px;max-width:44ch}
+    .fit-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+    .fit-card{display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 20px;text-decoration:none;color:var(--text);transition:transform var(--transition),box-shadow var(--transition)}
+    .fit-card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,0,0,0.1)}
+    .fit-card img{width:130px;height:130px;object-fit:contain;margin-bottom:16px}
+    .fit-name{font-family:'Archivo Black',sans-serif;text-transform:uppercase;font-size:18px;margin-bottom:10px}
+    .fit-cfg{font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--red);font-weight:700}
+    @media(max-width:768px){.fit-grid{grid-template-columns:repeat(2,1fr);gap:16px}}
+
+    /* ── Closing CTA ── */
+    .cta-band{background:var(--red);color:#fff;text-align:center;padding:110px 0}
+    .cta-title{font-size:clamp(40px,6vw,88px);color:#fff;margin:16px 0 16px}
+    .cta-sub{color:rgba(255,255,255,0.9);margin-bottom:34px}
+    .btn-cta{display:inline-block;background:#fff;color:var(--red);font-family:'Archivo Black',sans-serif;font-size:15px;letter-spacing:0.06em;text-transform:uppercase;padding:18px 44px;border-radius:3px;text-decoration:none;transition:transform 120ms}
+    .btn-cta:hover{transform:scale(1.03)}
+
+    /* ── Newsletter ── */
+    .news{background:var(--dark);color:#fff;padding:64px 0}
+    .news-inner{display:flex;align-items:center;justify-content:space-between;gap:36px;flex-wrap:wrap}
+    .news-title{font-size:clamp(24px,3vw,38px);color:#fff;margin-bottom:8px}
+    .news-sub{color:rgba(255,255,255,0.7);max-width:44ch}
+    .news-form{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .news-form input{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:15px 18px;border-radius:3px;min-width:240px;font-family:'Archivo',sans-serif}
+    .news-form input::placeholder{color:rgba(255,255,255,0.5)}
+    .news-ok{color:#fff;font-weight:600}
+
+    /* ── Footer ── */
+    .footer{background:#0d0d0d;color:rgba(255,255,255,0.7);padding:64px 0 32px}
+    .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:36px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,0.12)}
+    .footer-logo{margin-bottom:14px}
+    .footer-logo img{height:40px;width:auto;display:block}
+    .footer-brand p{max-width:30ch;font-size:14px}
+    .footer-col h4{font-family:'Archivo Black',sans-serif;font-size:13px;text-transform:uppercase;color:#fff;margin-bottom:16px;letter-spacing:0.06em}
+    .footer-col a{display:block;color:rgba(255,255,255,0.6);text-decoration:none;font-size:14px;margin-bottom:10px;transition:color var(--transition)}
+    .footer-col a:hover{color:#fff}
+    .footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:28px}
+    .footer-pay{display:flex;gap:16px;align-items:center;opacity:0.75}
+    .footer-pay img{filter:invert(1)}
+    .footer-legal{font-size:12px;color:rgba(255,255,255,0.5)}
+    @media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:28px}.news-inner{flex-direction:column;align-items:flex-start}}
+
+    /* ── Brand logo marquee (dark band, auto-scroll, no heading) ── */
+    .brandstrip{background:var(--bg-alt);border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;padding:32px 0}
+    .brandstrip-track{display:flex;width:max-content;align-items:center;animation:brand-scroll 34s linear infinite}
+    .brandstrip:hover .brandstrip-track{animation-play-state:paused}
+    .brand-logo{flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0 46px;color:var(--text);opacity:1;transition:opacity .3s}
+    .brand-logo:hover{opacity:0.6}
+    .brand-logo svg{height:42px;width:auto;display:block}
+    .brand-logo img{height:34px;width:auto;max-width:170px;object-fit:contain;display:block}
+    /* per-logo optical sizing — wordmarks shorter, symbol+caption lockups taller */
+    .brand-logo img[alt="Avatr"]{height:54px}
+    .brand-logo img[alt="BYD"]{height:20px}
+    .brand-logo img[alt="MG"]{height:48px}
+    .brand-logo img[alt="AION"]{height:22px}
+    .brand-logo img[alt="Deepal"]{height:52px}
+    .brand-logo img[alt="Denza"]{height:52px}
+    .brand-logo img[alt="Neta"]{height:50px}
+    @keyframes brand-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    @media(prefers-reduced-motion:reduce){.brandstrip-track{animation:none;flex-wrap:wrap;justify-content:center;width:100%}}
+    @media(max-width:480px){.brand-logo{padding:0 26px}.brand-logo svg{height:34px}
+      .brand-logo img{max-width:120px}
+      .brand-logo img[alt="Avatr"]{height:44px}
+      .brand-logo img[alt="BYD"]{height:17px}
+      .brand-logo img[alt="MG"]{height:39px}
+      .brand-logo img[alt="AION"]{height:18px}
+      .brand-logo img[alt="Deepal"]{height:42px}
+      .brand-logo img[alt="Denza"]{height:42px}
+      .brand-logo img[alt="Neta"]{height:40px}}
+
+    /* ── Wheel collection grid (all 30 designs, spin on hover) ── */
+    .wheels{padding:86px 0 96px;background:var(--bg)}
+    .wheels-head{text-align:center;max-width:640px;margin:0 auto 46px}
+    .wheels-head h2{font-size:clamp(28px,3.8vw,52px);line-height:0.95;margin:12px 0 14px}
+    .wheels-head h2 em{font-style:normal;color:var(--red)}
+    .wheels-head p{color:var(--text-muted);font-size:15px;line-height:1.6}
+    .wheels-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:clamp(14px,1.8vw,28px)}
+    .wheel-cell{position:relative;aspect-ratio:1;border-radius:50%;background:rgba(20,18,12,0.035);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:transform var(--transition),box-shadow var(--transition),background var(--transition)}
+    .wheel-cell:hover{transform:translateY(-4px);background:rgba(20,18,12,0.06);box-shadow:0 18px 34px -22px rgba(20,18,12,0.5)}
+    .wheel-cell img{width:90%;height:90%;object-fit:contain;border-radius:50%;will-change:transform}
+    .wheel-cell:hover img{animation:wheelspin 2.6s linear infinite}
+    @keyframes wheelspin{to{transform:rotate(360deg)}}
+    @media(prefers-reduced-motion:reduce){.wheel-cell:hover img{animation:none}}
+    @media(max-width:980px){.wheels-grid{grid-template-columns:repeat(4,1fr)}}
+    @media(max-width:560px){
+      .wheels{padding:50px 0 52px}
+      .wheels-head{margin-bottom:26px}
+      .wheels-grid{display:grid;grid-template-columns:none;grid-auto-flow:column;grid-template-rows:repeat(3,auto);grid-auto-columns:27vw;gap:12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;touch-action:pan-x;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px}
+      .wheels-grid::-webkit-scrollbar{display:none}
+      .wheel-cell{scroll-snap-align:start}
+    }
+
+    /* ── Featured products row (Style A — motorsport spec tiles) ── */
+    .feat{padding:88px 0 40px;background:var(--bg)}
+    .feat-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:26px}
+    .feat-head h2{font-size:clamp(28px,3.8vw,52px);line-height:0.95}
+    .feat-head h2 em{font-style:normal;color:var(--red)}
+    .feat-arrows{display:flex;gap:10px;flex-shrink:0}
+    .feat-arrows button{width:46px;height:46px;border-radius:50%;border:1.5px solid var(--text);background:transparent;cursor:pointer;font-size:20px;line-height:1;color:var(--text);transition:background var(--transition),color var(--transition)}
+    .feat-arrows button:hover{background:var(--text);color:#fff}
+    .feat-row{display:flex;gap:26px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;padding:4px 24px 22px;padding-left:max(24px,calc((100vw - 1240px)/2 + 24px));scroll-padding-left:max(24px,calc((100vw - 1240px)/2 + 24px));-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain;scrollbar-width:none;-ms-overflow-style:none}
+    .feat-row::-webkit-scrollbar{display:none}
+    .feat-card{scroll-snap-align:start;flex:0 0 clamp(300px,40vw,420px)}
+    .feat-sq{position:relative;aspect-ratio:1;border-radius:16px;overflow:hidden;background:#fff;border:1px solid var(--border)}
+    .feat-sq img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .feat-big{position:absolute;left:18px;top:2px;font-family:'Archivo Black',sans-serif;font-size:clamp(80px,9vw,120px);line-height:1;color:rgba(255,255,255,0.07)}
+    .feat-badge{position:absolute;top:18px;right:18px;background:var(--red);color:#fff;font-family:'Archivo Black',sans-serif;font-size:10px;letter-spacing:0.1em;padding:5px 9px;border-radius:3px}
+    .feat-sp{display:none}
+    .feat-specs{display:flex;gap:12px;align-items:center;font-size:12px;letter-spacing:0.07em;text-transform:uppercase;font-weight:700;color:#fff}
+    .feat-specs i{font-style:normal;color:#ff5a6a}
+    .feat-bd{padding:16px 4px 0;display:flex;align-items:baseline;justify-content:space-between}
+    .feat-nm{font-family:'Archivo Black',sans-serif;text-transform:uppercase;font-size:clamp(20px,2vw,28px);line-height:1}
+    .feat-pr{display:none}
+    .feat-cta{display:inline-block;margin-top:14px;font-family:'Archivo Black',sans-serif;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text);border:1.5px solid var(--text);padding:11px 18px;border-radius:3px;text-decoration:none;transition:background var(--transition),color var(--transition),border-color var(--transition)}
+    .feat-cta:hover{background:var(--red);border-color:var(--red);color:#fff}
+    @media(max-width:480px){.feat-card{flex-basis:80vw}}
+
+    /* ── A/B airflow comparison (editorial split, refined) ── */
+    .ab{padding:92px 0 100px;background:var(--bg)}
+    .ab-grid{display:grid;grid-template-columns:1.18fr 0.82fr;gap:56px;align-items:center}
+    .ab-compare{position:relative;overflow:hidden;border-radius:10px;background:#111;aspect-ratio:4/3;cursor:ew-resize;user-select:none;touch-action:none;box-shadow:0 34px 70px -28px rgba(22,19,13,0.42)}
+    .ab-compare::after{content:"";position:absolute;inset:0;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.16);pointer-events:none;z-index:4}
+    .ab-compare img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+    .ab-top{clip-path:inset(0 50% 0 0)}
+    .ab-hl{position:absolute;top:0;bottom:0;left:50%;width:1.5px;background:rgba(255,255,255,0.92);transform:translateX(-50%);pointer-events:none;z-index:3}
+    .ab-grip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.9);background:rgba(0,0,0,0.22);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;gap:3px;pointer-events:none;z-index:3}
+    .ab-grip span{width:5px;height:5px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff}
+    .ab-grip span.a{transform:rotate(45deg)}.ab-grip span.b{transform:rotate(-135deg)}
+    .ab-lab{position:absolute;top:16px;z-index:3;font-size:10.5px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.92);text-shadow:0 1px 3px rgba(0,0,0,0.5)}
+    .ab-lab.l{left:16px}.ab-lab.r{right:16px}
+    .ab-title{font-family:'Archivo Black',sans-serif;text-transform:uppercase;font-size:clamp(28px,3.2vw,46px);line-height:0.96;margin:12px 0 14px}
+    .ab-title em{font-style:normal;color:var(--red)}
+    .ab-lead{color:var(--text-muted);font-size:15px;max-width:40ch;margin-bottom:26px}
+    .ab-cols{display:grid;grid-template-columns:1fr 1fr;gap:26px;border-top:1px solid var(--border);padding-top:24px}
+    .ab-coltag{display:inline-block;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;margin-bottom:16px}
+    .ab-coltag.bad{color:var(--text-muted)}
+    .ab-coltag.good{color:var(--red)}
+    .ab-list{list-style:none}
+    .ab-list li{position:relative;padding-left:30px;margin-bottom:13px;font-size:15px;line-height:1.45}
+    .col-bad .ab-list li{color:var(--text-muted)}
+    .col-bad .ab-list li::before{content:"\2715";position:absolute;left:0;top:1px;color:rgba(22,21,15,0.38);font-weight:700;font-size:13px}
+    .col-good .ab-list li::before{content:"\2713";position:absolute;left:0;top:0;color:var(--red);font-weight:700;font-size:16px}
+    .ab-foot{margin-top:24px;font-size:11px;color:var(--text-muted);opacity:0.8}
+    @media(max-width:840px){.ab-grid{grid-template-columns:1fr;gap:32px}}
+    @media(max-width:480px){.ab-cols{grid-template-columns:1fr;gap:18px}}
+
+    /* ── Scroll-zoom pinned reveal (left text → video grows to full → line + caption) ── */
+    .zoom{position:relative;height:300vh;background:var(--bg);--gut:max(24px,calc((100vw - 1240px)/2 + 24px))}
+    .zoom-pin{position:sticky;top:0;height:100vh;overflow:hidden}
+    .zoom-intro{position:absolute;top:0;left:0;width:46%;height:100%;display:flex;align-items:center;padding:0 4vw 0 var(--gut);z-index:2}
+    .zoom-intro p{font-size:clamp(20px,2.1vw,30px);line-height:1.32;max-width:20ch;color:var(--text)}
+    .zoom-intro strong{font-weight:700;color:var(--red)}
+    .zoom-about{margin-top:28px}
+    .zoom-media{position:absolute;top:18%;left:48%;width:46%;height:58%;overflow:hidden;border-radius:10px;background:#111;z-index:3;box-shadow:0 34px 70px -30px rgba(22,19,13,0.45);will-change:top,left,width,height}
+    .zoom-media video,.zoom-media img{width:100%;height:100%;object-fit:cover;display:block}
+    .zoom-overlay{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0}
+    .zoom-overlay::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,0.55),transparent 42%)}
+    .zoom-rule{position:absolute;left:var(--gut);right:var(--gut);top:62%;height:1px;background:rgba(255,255,255,0.55);transform:scaleX(0);transform-origin:left;z-index:2}
+    .zoom-cap{position:absolute;top:64%;z-index:2;color:#fff}
+    .zoom-cap.l{left:var(--gut)}
+    .zoom-cap.r{right:var(--gut);text-align:right;max-width:34ch}
+    .zoom-cap .nm{font-family:'Archivo Black',sans-serif;text-transform:uppercase;font-size:clamp(20px,2vw,28px);line-height:1}
+    .zoom-cap .ph{font-size:13px;color:rgba(255,255,255,0.72);margin-top:6px;letter-spacing:0.04em}
+    .zoom-cap.r p{font-size:clamp(17px,1.8vw,24px);line-height:1.3}
+    .zoom.is-static{height:auto}
+    .zoom.is-static .zoom-pin{position:relative;height:auto;padding:70px 0}
+    .zoom.is-static .zoom-intro{position:static;width:100%;height:auto;padding:0 var(--gut);margin-bottom:26px}
+    .zoom.is-static .zoom-media{position:relative;top:auto;left:auto;width:calc(100% - 2*var(--gut));height:auto;aspect-ratio:16/9;margin:0 var(--gut);border-radius:10px}
+    .zoom.is-static .zoom-overlay{position:relative;opacity:1;margin-top:20px;padding:0 var(--gut)}
+    .zoom.is-static .zoom-overlay::after{display:none}
+    .zoom.is-static .zoom-rule{position:relative;left:auto;right:auto;top:auto;transform:none;background:var(--border);margin-bottom:16px}
+    .zoom.is-static .zoom-cap{position:relative;top:auto;color:var(--text)}
+    .zoom.is-static .zoom-cap.r{text-align:left;max-width:none;margin-top:14px}
+    .zoom.is-static .zoom-cap.r p{color:var(--text-muted)}
+    .zoom.is-static .zoom-cap .ph{color:var(--text-muted)}
+
+    /* ── UGC vertical video wall (staggered editorial) ── */
+    .ugc{padding:92px 0 100px;background:var(--bg)}
+    .ugc-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:42px}
+    .ugc-title{font-family:'Archivo Black',sans-serif;text-transform:uppercase;font-size:clamp(26px,3.4vw,46px);line-height:0.95;margin-top:10px}
+    .ugc-title em{font-style:normal;color:var(--red)}
+    .ugc-grid{display:flex;gap:18px;align-items:flex-start;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;padding-bottom:6px}
+    .ugc-grid::-webkit-scrollbar{display:none}
+    .ugc-card{position:relative;flex:0 0 clamp(240px,22vw,300px);aspect-ratio:9/16;border-radius:14px;overflow:hidden;background:#111;text-decoration:none;scroll-snap-align:start;transition:transform .5s cubic-bezier(0.16,1,0.3,1)}
+    .ugc-grid .ugc-card:nth-child(even){margin-top:42px}
+    .ugc-card:hover{transform:translateY(-8px)}
+    .ugc-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .ugc-card .ov{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,0.72),transparent 50%)}
+    .ugc-card .play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;transition:transform .3s}
+    .ugc-card:hover .play{transform:translate(-50%,-50%) scale(1.08)}
+    .ugc-card .play::after{content:"";border-left:14px solid var(--text);border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px}
+    .ugc-card .bd{position:absolute;left:0;right:0;bottom:0;padding:15px;color:#fff}
+    .ugc-card .h{font-family:'Archivo Black',sans-serif;font-size:13px}
+    .ugc-card .cap{font-size:12px;color:rgba(255,255,255,0.82);margin-top:3px;line-height:1.35}
+    .ugc-card .views{position:absolute;top:12px;right:12px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,0.4);backdrop-filter:blur(6px);padding:4px 8px;border-radius:4px}
+    @media(max-width:760px){.ugc-card{flex-basis:64vw}.ugc-grid .ugc-card:nth-child(even){margin-top:24px}}
+
+    /* ── Brand story banner (full-bleed, editorial b&w) ── */
+    .sbanner{position:relative;min-height:88vh;display:flex;align-items:center;background:#0c0c0c;overflow:hidden}
+    .sbanner-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;filter:grayscale(1) contrast(1.03);z-index:0}
+    .sbanner::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(0,0,0,0.78) 0%,rgba(0,0,0,0.52) 38%,rgba(0,0,0,0.12) 70%,rgba(0,0,0,0) 100%)}
+    .sbanner .wrap{position:relative;z-index:2;width:100%}
+    .sbanner-inner{max-width:620px;color:#fff}
+    .sbanner .eyebrow{color:rgba(255,255,255,0.72)}
+    .sbanner h2{font-family:'Archivo Black',sans-serif;text-transform:uppercase;color:#fff;font-size:clamp(34px,5.2vw,66px);line-height:0.96;margin:14px 0 0}
+    .sbanner p{color:rgba(255,255,255,0.82);font-size:clamp(15px,1.3vw,18px);line-height:1.62;margin:22px 0 0;max-width:520px}
+    .sbanner-btn{display:inline-block;margin-top:30px;padding:14px 34px;background:#fff;border-radius:40px;color:#16150f;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;transition:background var(--transition),color var(--transition)}
+    .sbanner-btn:hover{background:var(--red);color:#fff}
+    @media(max-width:760px){.sbanner{min-height:74vh}.sbanner::after{background:linear-gradient(0deg,rgba(0,0,0,0.86) 0%,rgba(0,0,0,0.46) 52%,rgba(0,0,0,0.18) 100%)}.sbanner-inner{max-width:none}}
+
+    /* ── Reviews (editorial, hairline-separated) ── */
+    .rev{padding:92px 0 100px;background:var(--bg)}
+    .rev-head{margin-bottom:44px}
+    .rev-title{font-size:clamp(28px,3.6vw,52px);line-height:0.95;margin:10px 0 20px}
+    .rev-agg{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+    .rev-agg .score{font-family:'Archivo Black',sans-serif;font-size:clamp(34px,4vw,56px);color:var(--red);line-height:1}
+    .rev-agg .stars{color:var(--red);letter-spacing:3px;font-size:18px}
+    .rev-agg .meta{color:var(--text-muted);font-size:14px}
+    .rev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 44px}
+    .rev-item{border-top:1px solid var(--border);padding:28px 0}
+    .rev-item .s{color:var(--red);letter-spacing:2px;font-size:13px;margin-bottom:12px}
+    .rev-item blockquote{font-size:16px;line-height:1.5;margin-bottom:14px}
+    .rev-item figcaption{font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted)}
+    @media(max-width:860px){.rev-grid{grid-template-columns:1fr 1fr;gap:0 30px}}
+    @media(max-width:560px){.rev-grid{grid-template-columns:1fr}}
+
+    /* ── FAQ (split header + accordion) ── */
+    .faq{padding:92px 0 100px;background:var(--bg-alt)}
+    .faq-grid{display:grid;grid-template-columns:0.8fr 1.2fr;gap:56px;align-items:start}
+    .faq-title{font-size:clamp(28px,3.6vw,52px);line-height:0.95;margin:10px 0 16px}
+    .faq-title em{font-style:normal;color:var(--red)}
+    .faq-side p{color:var(--text-muted);font-size:15px;max-width:30ch;margin-bottom:16px}
+    .faq-contact{font-family:'Archivo Black',sans-serif;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:var(--red);text-decoration:none}
+    .faq-side{position:sticky;top:90px;align-self:start}
+    .faq-fig{margin:32px 0 0;border-radius:16px;overflow:hidden;aspect-ratio:3/2;background:#111}
+    .faq-fig img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s cubic-bezier(0.16,1,0.3,1)}
+    .faq-fig:hover img{transform:scale(1.04)}
+    .faq-item{border-top:1px solid var(--border)}
+    .faq-item:last-child{border-bottom:1px solid var(--border)}
+    .faq-item summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:24px;padding:22px 0;font-family:'Archivo Black',sans-serif;text-transform:uppercase;letter-spacing:0.01em;font-size:clamp(15px,1.5vw,19px)}
+    .faq-item summary::-webkit-details-marker{display:none}
+    .faq-ic{position:relative;flex-shrink:0;width:22px;height:22px}
+    .faq-ic::before,.faq-ic::after{content:"";position:absolute;background:var(--red);transition:transform .3s ease}
+    .faq-ic::before{left:3px;right:3px;top:10px;height:2px}
+    .faq-ic::after{top:3px;bottom:3px;left:10px;width:2px}
+    .faq-item[open] .faq-ic::after{transform:scaleY(0)}
+    .faq-ans{padding:0 0 24px;color:var(--text-muted);font-size:15px;line-height:1.65;max-width:62ch}
+    @media(max-width:780px){.faq-grid{grid-template-columns:1fr;gap:28px}.faq-side{position:static;top:auto}.faq-fig{aspect-ratio:16/10;margin-top:24px}}
+
+    /* ── Hero reveal: content scrolls up over the pinned hero ── */
+    .reveal-wrap{position:relative;z-index:1;background:var(--bg)}
+    /* ── Lenis smooth scroll ── */
+    html.lenis,html.lenis body{height:auto}
+    .lenis.lenis-smooth{scroll-behavior:auto!important}
+    .lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+    .lenis.lenis-stopped{overflow:clip}
+
+    /* ── Responsive polish (tablet + phone) ── */
+    @media(max-width:768px){
+      .feat{padding:64px 0 28px}
+      .ab{padding:64px 0 72px}
+      .ugc{padding:64px 0 72px}
+      .rev{padding:64px 0 72px}
+      .faq{padding:64px 0 72px}
+      .brandstrip{padding:24px 0}
+      .cta-band{padding:78px 0}
+      .news{padding:52px 0}
+      .footer{padding:52px 0 28px}
+      .ugc-head{margin-bottom:28px}
+      .feat-head{margin-bottom:20px}
+      .news-inner{gap:24px}
+      .news-form{width:100%}
+      .news-form input{min-width:0;flex:1 1 180px;width:auto}
+      .news-form .btn-primary{flex:0 0 auto}
+    }
+    @media(max-width:480px){
+      .feat{padding:50px 0 22px}
+      .ab{padding:50px 0 60px}
+      .ugc,.rev,.faq{padding:50px 0 60px}
+      .sbanner{min-height:68vh}
+      .cta-band{padding:62px 0}
+      .hero-content{gap:14px}
+      .hero-sub{max-width:30ch}
+      .ab-lead{max-width:none}
+      .footer-grid{grid-template-columns:1fr 1fr;gap:24px 28px}
+      .footer-brand{grid-column:1 / -1}
+      .feat-arrows button,.ugc-head .feat-arrows button{width:40px;height:40px;font-size:18px}
+    }
+  </style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="nav-logo" href="#top"><img src="public/logo.png" alt="HOCENLUB"></a>
+    <nav class="nav-links">
+      <span class="nav-item has-mega">
+        <a href="#featured" class="nav-shop">Shop</a>
+        <div class="mega">
+          <div class="mega-inner wrap">
+            <div class="mega-head">Shop by car brand</div>
+            <div class="mega-grid">
+              <a class="mega-card" href="index-2.html"><img src="public/brand-denza.png" alt=""><span>For Denza</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-byd.png" alt=""><span>For BYD</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-aion.png" alt=""><span>For AION</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-neta.png" alt=""><span>For NETA</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-deepal.png" alt=""><span>For Deepal</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-avatr.png" alt=""><span>For Avatr</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-mg.png" alt=""><span>For MG</span></a>
+            </div>
+          </div>
+        </div>
+      </span>
+      <a href="#story-banner">About Us</a>
+      <a href="#footer">Contact Us</a>
+    </nav>
+    <div class="nav-right">
+      <a href="#" class="nav-ic" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg></a>
+      <a href="#" class="nav-ic" aria-label="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></a>
+      <a href="#" class="nav-ic" aria-label="Cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l-1.2 12.2a1.5 1.5 0 0 1-1.5 1.3H8.7a1.5 1.5 0 0 1-1.5-1.3Z"/><path d="M9 7V5.5a3 3 0 0 1 6 0V7"/></svg><span class="nav-badge">0</span></a>
+    </div>
+    <button class="nav-burger" id="burger" aria-label="Menu">&#9776;</button>
+  </div>
+</header>
+
+<!-- ── Hero slider ── -->
+<div class="hero-stage">
+<div class="hero-pin">
+<div class="hero-layer -front" id="heroFront">
+<section class="hero" id="top">
+  <div class="hero-track" id="heroTrack">
+    <div class="slide active">
+      <video class="hero-media" autoplay muted loop playsinline poster="public/last-frame.jpg">
+        <source src="hero-1.mp4" type="video/mp4">
+      </video>
+      <div class="hero-scrim"></div>
+      <div class="hero-content wrap">
+        <div class="eyebrow hero-eb">Engineered for the road ahead</div>
+        <h1 class="hero-title">Drive<br>Further</h1>
+        <p class="hero-sub">Aerodynamic wheel covers that turn drag into distance.</p>
+        <div class="hero-cta"><a class="btn-primary" href="index-2.html">Configure Yours</a></div>
+      </div>
+    </div>
+    <div class="slide">
+      <img class="hero-media" src="public/fit-wheels.jpg" alt="Aerodisc fitted across Tesla models">
+      <div class="hero-scrim"></div>
+      <div class="hero-content wrap">
+        <div class="eyebrow hero-eb">Fits every Tesla</div>
+        <h1 class="hero-title">One Disc.<br>Every Model.</h1>
+        <p class="hero-sub">Model 3, Y, S and X — precision-fit, tool-light install.</p>
+        <div class="hero-cta"><a class="btn-primary" href="index-2.html">Find Your Fit</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-dim" id="heroDim"></div>
+  <button class="hero-arrow left" id="heroPrev" aria-label="Previous slide">&#8249;</button>
+  <button class="hero-arrow right" id="heroNext" aria-label="Next slide">&#8250;</button>
+  <div class="hero-dots" id="heroDots"></div>
+  <div class="hero-cue">&#8964;</div>
+</section>
+</div>
+<div class="hero-layer -back">
+<!-- Featured Builds — revealed beneath the hero as it pushes up -->
+<section class="feat" id="featured">
+  <div class="wrap">
+    <div class="feat-head">
+      <h2>Built For <em>Your Brand</em></h2>
+      <div class="feat-arrows">
+        <button id="featPrev" aria-label="Scroll left">&#8249;</button>
+        <button id="featNext" aria-label="Scroll right">&#8250;</button>
+      </div>
+    </div>
+  </div>
+  <div class="feat-row" id="featRow">
+      <article class="feat-card">
+        <div class="feat-sq"><img src="public/car-denza.jpg" alt="For Denza"></div>
+        <div class="feat-bd"><span class="feat-nm">For Denza</span><span class="feat-pr">$289</span></div>
+        <a class="feat-cta" href="index-2.html">Configure &#8250;</a>
+      </article>
+      <article class="feat-card">
+        <div class="feat-sq"><img src="public/car-byd.jpg" alt="For BYD"></div>
+        <div class="feat-bd"><span class="feat-nm">For BYD</span><span class="feat-pr">$249</span></div>
+        <a class="feat-cta" href="index-2.html">Configure &#8250;</a>
+      </article>
+      <article class="feat-card">
+        <div class="feat-sq"><img src="public/car-byd.jpg" alt="For AION"></div>
+        <div class="feat-bd"><span class="feat-nm">For AION</span><span class="feat-pr">$259</span></div>
+        <a class="feat-cta" href="index-2.html">Configure &#8250;</a>
+      </article>
+      <article class="feat-card">
+        <div class="feat-sq"><img src="public/car-denza.jpg" alt="For NETA"></div>
+        <div class="feat-bd"><span class="feat-nm">For NETA</span><span class="feat-pr">$249</span></div>
+        <a class="feat-cta" href="index-2.html">Configure &#8250;</a>
+      </article>
+      <article class="feat-card">
+        <div class="feat-sq"><img src="public/car-byd.jpg" alt="For Deepal"></div>
+        <div class="feat-bd"><span class="feat-nm">For Deepal</span><span class="feat-pr">$269</span></div>
+        <a class="feat-cta" href="index-2.html">Configure &#8250;</a>
+      </article>
+      <article class="feat-card">
+        <div class="feat-sq"><img src="public/car-denza.jpg" alt="For Avatr"></div>
+        <div class="feat-bd"><span class="feat-nm">For Avatr</span><span class="feat-pr">$299</span></div>
+        <a class="feat-cta" href="index-2.html">Configure &#8250;</a>
+      </article>
+      <article class="feat-card">
+        <div class="feat-sq"><img src="public/car-byd.jpg" alt="For MG"></div>
+        <div class="feat-bd"><span class="feat-nm">For MG</span><span class="feat-pr">$239</span></div>
+        <a class="feat-cta" href="index-2.html">Configure &#8250;</a>
+      </article>
+    </div>
+</section>
+</div>
+</div>
+</div>
+
+<div class="reveal-wrap">
+<!-- ── Brand logo marquee (placeholder SVG logos — swap for real brand marks later) ── -->
+<section class="brandstrip" aria-label="Trusted by leading marques">
+  <div class="brandstrip-track" id="brandTrack">
+    <!-- group repeated twice for a seamless loop -->
+    <div class="brand-logo"><img src="public/brand-avatr.png" alt="Avatr"></div>
+    <div class="brand-logo"><img src="public/brand-byd.png" alt="BYD"></div>
+    <div class="brand-logo"><img src="public/brand-mg.png" alt="MG"></div>
+    <div class="brand-logo"><img src="public/brand-aion.png" alt="AION"></div>
+    <div class="brand-logo"><img src="public/brand-deepal.png" alt="Deepal"></div>
+    <div class="brand-logo"><img src="public/brand-denza.png" alt="Denza"></div>
+    <div class="brand-logo"><img src="public/brand-neta.png" alt="Neta"></div>
+
+    <div class="brand-logo"><img src="public/brand-avatr.png" alt="Avatr"></div>
+    <div class="brand-logo"><img src="public/brand-byd.png" alt="BYD"></div>
+    <div class="brand-logo"><img src="public/brand-mg.png" alt="MG"></div>
+    <div class="brand-logo"><img src="public/brand-aion.png" alt="AION"></div>
+    <div class="brand-logo"><img src="public/brand-deepal.png" alt="Deepal"></div>
+    <div class="brand-logo"><img src="public/brand-denza.png" alt="Denza"></div>
+    <div class="brand-logo"><img src="public/brand-neta.png" alt="Neta"></div>
+  </div>
+</section>
+
+<!-- ── Wheel collection (all 30 designs, hover to spin) ── -->
+<section class="wheels" id="designs">
+  <div class="wrap">
+    <div class="wheels-head reveal">
+      <div class="eyebrow">The Collection</div>
+      <h2>Thirty <em>Designs</em></h2>
+      <p>One disc, thirty faces. Hover any wheel to see it spin — then pick the look that fits your build.</p>
+    </div>
+    <div class="wheels-grid reveal">
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 1"><img src="public/wheel-1.png" alt="Aerodisc wheel design 1" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 2"><img src="public/wheel-2.png" alt="Aerodisc wheel design 2" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 3"><img src="public/wheel-3.png" alt="Aerodisc wheel design 3" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 4"><img src="public/wheel-4.png" alt="Aerodisc wheel design 4" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 5"><img src="public/wheel-5.png" alt="Aerodisc wheel design 5" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 6"><img src="public/wheel-6.png" alt="Aerodisc wheel design 6" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 7"><img src="public/wheel-7.png" alt="Aerodisc wheel design 7" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 8"><img src="public/wheel-8.png" alt="Aerodisc wheel design 8" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 9"><img src="public/wheel-9.png" alt="Aerodisc wheel design 9" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 10"><img src="public/wheel-10.png" alt="Aerodisc wheel design 10" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 11"><img src="public/wheel-11.png" alt="Aerodisc wheel design 11" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 12"><img src="public/wheel-12.png" alt="Aerodisc wheel design 12" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 13"><img src="public/wheel-13.png" alt="Aerodisc wheel design 13" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 14"><img src="public/wheel-14.png" alt="Aerodisc wheel design 14" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 15"><img src="public/wheel-15.png" alt="Aerodisc wheel design 15" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 16"><img src="public/wheel-16.png" alt="Aerodisc wheel design 16" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 17"><img src="public/wheel-17.png" alt="Aerodisc wheel design 17" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 18"><img src="public/wheel-18.png" alt="Aerodisc wheel design 18" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 19"><img src="public/wheel-19.png" alt="Aerodisc wheel design 19" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 20"><img src="public/wheel-20.png" alt="Aerodisc wheel design 20" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 21"><img src="public/wheel-21.png" alt="Aerodisc wheel design 21" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 22"><img src="public/wheel-22.png" alt="Aerodisc wheel design 22" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 23"><img src="public/wheel-23.png" alt="Aerodisc wheel design 23" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 24"><img src="public/wheel-24.png" alt="Aerodisc wheel design 24" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 25"><img src="public/wheel-25.png" alt="Aerodisc wheel design 25" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 26"><img src="public/wheel-26.png" alt="Aerodisc wheel design 26" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 27"><img src="public/wheel-27.png" alt="Aerodisc wheel design 27" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 28"><img src="public/wheel-28.png" alt="Aerodisc wheel design 28" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 29"><img src="public/wheel-29.png" alt="Aerodisc wheel design 29" loading="lazy"></a>
+      <a class="wheel-cell" href="index-2.html" aria-label="Aerodisc design 30"><img src="public/wheel-30.png" alt="Aerodisc wheel design 30" loading="lazy"></a>
+    </div>
+  </div>
+</section>
+
+<!-- ── A/B Airflow comparison (editorial split) ── -->
+<section class="ab" id="aero">
+  <div class="wrap ab-grid">
+    <div class="ab-compare" id="abCompare">
+      <img class="ab-base" src="public/turbulance-2.jpg" alt="Clean airflow with the Aerodisc cover fitted">
+      <img class="ab-top" src="public/turbulance-1.jpg" alt="Turbulent airflow around open factory spokes">
+      <span class="ab-lab l">Without</span>
+      <span class="ab-lab r">With</span>
+      <div class="ab-hl"></div>
+      <div class="ab-grip"><span class="a"></span><span class="b"></span></div>
+    </div>
+    <div class="ab-text reveal">
+      <div class="eyebrow">Aerodynamics</div>
+      <h2 class="ab-title">See the <em>Difference</em></h2>
+      <p class="ab-lead">Drag the line. Open factory spokes give way to a sealed Aerodisc face, and the air goes quiet.</p>
+      <div class="ab-cols">
+        <div class="ab-col col-bad">
+          <div class="ab-coltag bad">Without</div>
+          <ul class="ab-list">
+            <li>Open spokes churn air into turbulence.</li>
+            <li>Higher drag, fewer miles per charge.</li>
+            <li>Wind roar builds at highway speed.</li>
+          </ul>
+        </div>
+        <div class="ab-col col-good">
+          <div class="ab-coltag good">With Aerodisc</div>
+          <ul class="ab-list">
+            <li>Sealed face keeps airflow clean.</li>
+            <li>Up to +10 mi of range per charge.*</li>
+            <li>Lower drag, calmer and quieter cabin.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="ab-foot">*Illustrative figure for this demo. Replace with verified data before launch.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Scroll-zoom pinned reveal ── -->
+<section class="zoom" id="story">
+  <div class="zoom-pin">
+    <div class="zoom-intro" id="zoomIntro">
+      <div>
+        <p>The name says it. <strong>Aero</strong>, the air. <strong>Disc</strong>, the sealed face that tames it. One engineered surface, turning the drag of open spokes into quiet, usable range.</p>
+      </div>
+    </div>
+    <div class="zoom-media" id="zoomMedia">
+      <video autoplay muted loop playsinline poster="public/last-frame.jpg"><source src="hero-2.mp4" type="video/mp4"></video>
+    </div>
+    <div class="zoom-overlay" id="zoomOverlay">
+      <div class="zoom-rule" id="zoomRule"></div>
+      <div class="zoom-cap l"><div class="nm">Aerodisc</div><div class="ph">\ &#712;er-&#333;-&#716;disk \</div></div>
+      <div class="zoom-cap r"><p>A single closed wheel face, engineered to give every Tesla back its range.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── UGC vertical video wall ── -->
+<section class="ugc" id="ugc">
+  <div class="wrap">
+    <div class="ugc-head reveal">
+      <div><div class="eyebrow">As seen on TikTok</div><h2 class="ugc-title">The Aerodisc <em>Effect</em></h2></div>
+      <div class="feat-arrows">
+        <button id="ugcPrev" aria-label="Scroll left">&#8249;</button>
+        <button id="ugcNext" aria-label="Scroll right">&#8250;</button>
+      </div>
+    </div>
+    <div class="ugc-grid reveal" id="ugcRow">
+      <a class="ugc-card" href="#"><img src="public/turbo.jpg" alt=""><div class="ov"></div><div class="play"></div><div class="bd"><div class="h">@rangehacker</div><div class="cap">Twist-lock test at 80mph. Zero rattle.</div></div></a>
+      <a class="ugc-card" href="#"><img src="public/install.jpg" alt=""><div class="ov"></div><div class="play"></div><div class="bd"><div class="h">@model_y_life</div><div class="cap">Range up on my daily loop. Minutes to fit.</div></div></a>
+      <a class="ugc-card" href="#"><img src="public/game.jpg" alt=""><div class="ov"></div><div class="play"></div><div class="bd"><div class="h">@evdaily</div><div class="cap">Unboxing the Carbon set.</div></div></a>
+      <a class="ugc-card" href="#"><img src="public/bruise.jpg" alt=""><div class="ov"></div><div class="play"></div><div class="bd"><div class="h">@aero_addict</div><div class="cap">Before and after, you can hear it.</div></div></a>
+      <a class="ugc-card" href="#"><img src="public/material.jpg" alt=""><div class="ov"></div><div class="play"></div><div class="bd"><div class="h">@teslagrams</div><div class="cap">Swapped to Chalk. Cleanest look out there.</div></div></a>
+      <a class="ugc-card" href="#"><img src="public/fit-wheels.jpg" alt=""><div class="ov"></div><div class="play"></div><div class="bd"><div class="h">@ev_garage</div><div class="cap">Fits all four models, dialed it in fast.</div></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Brand story banner (full-bleed, editorial b&w) ── -->
+<section class="sbanner" id="story-banner">
+  <img class="sbanner-bg" src="public/protect.jpg" alt="">
+  <div class="wrap">
+    <div class="sbanner-inner reveal">
+      <div class="eyebrow">Our Story</div>
+      <h2>We're Engineers,<br>Not Stylists.</h2>
+      <p>Every Aerodisc cover starts in the wind tunnel, not on a mood board. We obsess over drag counts, twist-lock tolerances, and range you can actually measure &mdash; so the look is earned, never bolted on.</p>
+      <a class="sbanner-btn" href="#footer">About Us</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Reviews ── -->
+<section class="rev" id="reviews">
+  <div class="wrap">
+    <div class="rev-head reveal">
+      <div class="eyebrow">Reviews</div>
+      <h2 class="rev-title">What Owners Say</h2>
+      <div class="rev-agg"><span class="score">4.8</span><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="meta">12,400 verified reviews</span></div>
+    </div>
+    <div class="rev-grid reveal">
+      <figure class="rev-item"><div class="s">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>Range crept up on my Model Y commute, and the install took one coffee.</blockquote><figcaption>Marcus T. &middot; Model Y</figcaption></figure>
+      <figure class="rev-item"><div class="s">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>Looks factory-plus. Every charger chat now starts with "where'd you get those."</blockquote><figcaption>Dana R. &middot; Model 3</figcaption></figure>
+      <figure class="rev-item"><div class="s">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>The twist-lock is genius. Zero rattle at 80 on a windy day.</blockquote><figcaption>Priya S. &middot; Model S</figcaption></figure>
+      <figure class="rev-item"><div class="s">&#9733;&#9733;&#9733;&#9733;&#9734;</div><blockquote>The quieter cabin is the real surprise. Noticed it the first drive home.</blockquote><figcaption>Leo K. &middot; Model 3</figcaption></figure>
+      <figure class="rev-item"><div class="s">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>Swapped to Chalk. Cleanest my X has ever looked, full stop.</blockquote><figcaption>Renee M. &middot; Model X</figcaption></figure>
+      <figure class="rev-item"><div class="s">&#9733;&#9733;&#9733;&#9733;&#9733;</div><blockquote>Fitment was exact. No wobble, no spacers, no drama.</blockquote><figcaption>Amir D. &middot; Model Y</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section class="faq" id="faq">
+  <div class="wrap faq-grid">
+    <div class="faq-side reveal">
+      <div class="eyebrow">FAQ</div>
+      <h2 class="faq-title">Questions,<br><em>Answered</em></h2>
+      <p>Still unsure about fit or install? Our team replies within a day.</p>
+      <a class="faq-contact" href="#footer">Contact us &#8250;</a>
+      <figure class="faq-fig"><img src="public/material.jpg" alt="Aerodisc cover detail"></figure>
+    </div>
+    <div class="faq-list reveal">
+      <details class="faq-item"><summary>Will the Aerodisc fit my Tesla?<span class="faq-ic"></span></summary><div class="faq-ans">Yes. We make precision-fit sets for Model 3, Y, S and X. Choose your model when you configure and we load the exact fitment.</div></details>
+      <details class="faq-item"><summary>How hard is the install?<span class="faq-ic"></span></summary><div class="faq-ans">Tool-light, about nine minutes per wheel. Each cover twists on over your factory wheel and locks, no shop visit needed.</div></details>
+      <details class="faq-item"><summary>Will it change my speed or range readout?<span class="faq-ic"></span></summary><div class="faq-ans">No. The Aerodisc sits over the wheel face and does not change rolling diameter, so your speedometer and range display read exactly as before.</div></details>
+      <details class="faq-item"><summary>Will they stay on at highway speed?<span class="faq-ic"></span></summary><div class="faq-ans">Yes. Our patented twist-lock seats each cover factory-tight, validated well beyond legal highway speeds with zero rattle.</div></details>
+      <details class="faq-item"><summary>Can I still wash the car normally?<span class="faq-ic"></span></summary><div class="faq-ans">Absolutely. Wash, brush and pressure-rinse as usual. The sealed face actually keeps brake dust out of the barrel.</div></details>
+      <details class="faq-item"><summary>What about returns and warranty?<span class="faq-ic"></span></summary><div class="faq-ans">A 30-day test drive with a full refund, plus a 100,000-mile finish warranty. If it is not for you, send it back.</div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ── 08 Closing CTA ── -->
+<section class="cta-band">
+  <div class="wrap cta-inner reveal">
+    <div class="eyebrow" style="color:rgba(255,255,255,0.85)">Ready?</div>
+    <h2 class="cta-title">Ready to Ride?</h2>
+    <p class="cta-sub">Configure your set in under a minute. Free shipping, 30-day test drive.</p>
+    <a class="btn-cta" href="index-2.html">Configure Yours</a>
+  </div>
+</section>
+
+<!-- ── 09 Newsletter ── -->
+<section class="news">
+  <div class="wrap news-inner reveal">
+    <div>
+      <h3 class="news-title">Join the Slipstream</h3>
+      <p class="news-sub">Early drops, exclusive colorways, and range tips — straight to your inbox.</p>
+    </div>
+    <form class="news-form" id="newsForm">
+      <input type="email" required placeholder="Email address" aria-label="Email address">
+      <button class="btn-primary" type="submit">Subscribe</button>
+      <span class="news-ok" id="newsOk" hidden>Thanks — you're in. &#10003;</span>
+    </form>
+  </div>
+</section>
+
+<!-- ── 10 Footer ── -->
+<footer class="footer" id="footer">
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <div class="footer-logo"><img src="public/logo-white.png" alt="HOCENLUB"></div>
+      <p>Aerodynamic wheel covers engineered for every Tesla.</p>
+    </div>
+    <div class="footer-col"><h4>Shop</h4><a href="index-2.html">Aerodisc Set</a><a href="index-2.html">Configure</a><a href="#">Gift Cards</a></div>
+    <div class="footer-col"><h4>Company</h4><a href="#aero">Technology</a><a href="#ugc">Reviews</a><a href="#">About</a><a href="#">Careers</a></div>
+    <div class="footer-col"><h4>Support</h4><a href="#">Shipping</a><a href="#">Returns</a><a href="#">Warranty</a><a href="#">Contact</a></div>
+  </div>
+  <div class="wrap footer-bottom">
+    <div class="footer-pay">
+      <img src="https://cdn.simpleicons.org/visa/16150f" alt="Visa" height="20">
+      <img src="https://cdn.simpleicons.org/mastercard/16150f" alt="Mastercard" height="20">
+      <img src="https://cdn.simpleicons.org/americanexpress/16150f" alt="Amex" height="20">
+      <img src="https://cdn.simpleicons.org/applepay/16150f" alt="Apple Pay" height="20">
+      <img src="https://cdn.simpleicons.org/googlepay/16150f" alt="Google Pay" height="20">
+      <img src="https://cdn.simpleicons.org/paypal/16150f" alt="PayPal" height="20">
+      <img src="https://cdn.simpleicons.org/shopify/16150f" alt="Shop Pay" height="20">
+    </div>
+    <p class="footer-legal">© 2026 Aerodisc. All rights reserved.</p>
+  </div>
+</footer>
+</div>
+
+<script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+<script>
+(function(){
+  // Lenis smooth scroll (whole page)
+  var lenis=null;
+  if(window.Lenis && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    lenis=new Lenis({duration:1.1,easing:function(t){return Math.min(1,1.001-Math.pow(2,-10*t))}});
+    var rafL=function(time){lenis.raf(time);requestAnimationFrame(rafL)};
+    requestAnimationFrame(rafL);
+  }
+  // smooth in-page anchor scrolling (with sticky-nav offset); dead "#" links do nothing
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click',function(e){
+      var id=a.getAttribute('href');
+      if(!id||id.charAt(0)!=='#')return;
+      if(id==='#'){e.preventDefault();return;}
+      var el=document.querySelector(id);
+      e.preventDefault();
+      if(!el)return;
+      if(lenis)lenis.scrollTo(el,{offset:-64});
+      else el.scrollIntoView({behavior:'smooth'});
+      var lk=document.querySelector('.nav-links');if(lk)lk.classList.remove('open');
+    });
+  });
+
+  // hero push-up: scroll progress drives the hero's translate + scale + dim (Scout-style)
+  var heroStage=document.querySelector('.hero-stage'),heroFront=document.getElementById('heroFront'),heroDim=document.getElementById('heroDim');
+  if(heroStage&&heroFront&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    var hTick=false;
+    var heroFrame=function(){
+      var rect=heroStage.getBoundingClientRect();
+      var dist=heroStage.offsetHeight-window.innerHeight;
+      var p=Math.min(1,Math.max(0,-rect.top/(dist||1)));
+      heroFront.style.transform='translate3d(0,'+(-p*100).toFixed(3)+'%,0)';
+      if(heroDim)heroDim.style.opacity=(p*0.85).toFixed(3);
+    };
+    window.addEventListener('scroll',function(){if(!hTick){requestAnimationFrame(function(){heroFrame();hTick=false});hTick=true;}},{passive:true});
+    window.addEventListener('resize',heroFrame);
+    heroFrame();
+  }
+
+  // nav behavior: shadow on scroll + hide on scroll-down / show on scroll-up
+  var nav=document.getElementById('nav');
+  var lastY=window.scrollY,nTick=false;
+  function navFrame(){
+    var y=window.scrollY;
+    nav.classList.toggle('scrolled',y>10);
+    var open=document.querySelector('.nav-links.open');
+    if(!open && y>120 && y>lastY+4){nav.classList.add('-hide');}
+    else if(y<lastY-4 || y<=120){nav.classList.remove('-hide');}
+    lastY=y;nTick=false;
+  }
+  window.addEventListener('scroll',function(){if(!nTick){requestAnimationFrame(navFrame);nTick=true;}},{passive:true});
+  var burger=document.getElementById('burger'),links=document.querySelector('.nav-links');
+  burger.addEventListener('click',function(){links.classList.toggle('open')});
+  links.addEventListener('click',function(e){if(e.target.tagName==='A')links.classList.remove('open')});
+
+  var ro=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');ro.unobserve(en.target)}})},{threshold:0.15});
+  function bindReveals(){document.querySelectorAll('.reveal:not(.in)').forEach(function(el){ro.observe(el)})}
+  bindReveals();
+  window.__bindReveals=bindReveals;
+
+  // hero slider
+  var slides=[].slice.call(document.querySelectorAll('.hero .slide'));
+  if(slides.length){
+    var dotsWrap=document.getElementById('heroDots'),i=0,timer,N=slides.length;
+    var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    slides.forEach(function(_,n){var b=document.createElement('button');if(n===0)b.className='on';b.setAttribute('aria-label','Go to slide '+(n+1));b.addEventListener('click',function(){go(n)});dotsWrap.appendChild(b)});
+    var dots=[].slice.call(dotsWrap.children);
+    function go(n){slides[i].classList.remove('active');dots[i].classList.remove('on');i=(n+N)%N;slides[i].classList.add('active');dots[i].classList.add('on');restart()}
+    function next(){go(i+1)} function prev(){go(i-1)}
+    function restart(){if(reduce)return;clearInterval(timer);timer=setInterval(next,6000)}
+    document.getElementById('heroNext').addEventListener('click',next);
+    document.getElementById('heroPrev').addEventListener('click',prev);
+    var hero=document.querySelector('.hero');
+    hero.addEventListener('mouseenter',function(){clearInterval(timer)});
+    hero.addEventListener('mouseleave',restart);
+    var x0=null;
+    hero.addEventListener('touchstart',function(e){x0=e.touches[0].clientX},{passive:true});
+    hero.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>40){dx<0?next():prev()}x0=null});
+    restart();
+  }
+
+  // count-up stats
+  var nums=[].slice.call(document.querySelectorAll('.stat-num'));
+  if(nums.length){
+    var rdc=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    var runCount=function(el){
+      var to=+el.dataset.to,pre=el.dataset.prefix||'',suf=el.dataset.suffix||'',start=null,dur=1400;
+      if(rdc){el.textContent=pre+to+suf;return}
+      function tick(t){if(!start)start=t;var p=Math.min((t-start)/dur,1);var v=Math.round((1-Math.pow(1-p,3))*to);el.textContent=pre+v+suf;if(p<1)requestAnimationFrame(tick)}
+      requestAnimationFrame(tick);
+    };
+    var co=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){runCount(en.target);co.unobserve(en.target)}})},{threshold:0.6});
+    nums.forEach(function(n){co.observe(n)});
+  }
+
+  // product swatches
+  var swWrap=document.getElementById('swatches'),prodImg=document.getElementById('prodImg');
+  if(swWrap&&prodImg){
+    swWrap.addEventListener('click',function(e){
+      var b=e.target.closest('.sw');if(!b)return;
+      swWrap.querySelectorAll('.sw').forEach(function(s){s.classList.remove('on')});
+      b.classList.add('on');
+      prodImg.style.opacity=0;
+      setTimeout(function(){prodImg.src=b.dataset.img;prodImg.style.opacity=1},200);
+    });
+  }
+
+  // A/B airflow drag-compare slider
+  var ab=document.getElementById('abCompare');
+  if(ab){
+    var abTop=ab.querySelector('.ab-top'),abHl=ab.querySelector('.ab-hl'),abGrip=ab.querySelector('.ab-grip'),abDown=false;
+    var abSet=function(x){var r=ab.getBoundingClientRect();var p=Math.max(0,Math.min(1,(x-r.left)/r.width));abTop.style.clipPath='inset(0 '+((1-p)*100)+'% 0 0)';abHl.style.left=(p*100)+'%';abGrip.style.left=(p*100)+'%';};
+    ab.addEventListener('pointerdown',function(e){abDown=true;ab.setPointerCapture&&ab.setPointerCapture(e.pointerId);abSet(e.clientX)});
+    ab.addEventListener('pointermove',function(e){if(abDown)abSet(e.clientX)});
+    window.addEventListener('pointerup',function(){abDown=false});
+  }
+
+  // scroll-zoom pinned reveal
+  var zoom=document.getElementById('story');
+  if(zoom){
+    var zMedia=document.getElementById('zoomMedia'),zIntro=document.getElementById('zoomIntro'),zOv=document.getElementById('zoomOverlay'),zRule=document.getElementById('zoomRule');
+    var reduceZ=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    var clampZ=function(v){return Math.max(0,Math.min(1,v))};
+    var lerpZ=function(a,b,t){return a+(b-a)*t};
+    var isStaticZ=function(){return reduceZ||window.innerWidth<=760;};
+    var frameZ=function(){
+      var rect=zoom.getBoundingClientRect();
+      var total=zoom.offsetHeight-window.innerHeight;
+      var p=clampZ(-rect.top/(total||1));
+      var g=clampZ(p/0.72);
+      zMedia.style.top=lerpZ(18,0,g)+'%';
+      zMedia.style.left=lerpZ(48,0,g)+'%';
+      zMedia.style.width=lerpZ(46,100,g)+'%';
+      zMedia.style.height=lerpZ(58,100,g)+'%';
+      zMedia.style.borderRadius=lerpZ(10,0,g)+'px';
+      zIntro.style.opacity=1-clampZ(p/0.32);
+      var ov=clampZ((p-0.72)/0.2);
+      zOv.style.opacity=ov;zRule.style.transform='scaleX('+ov+')';
+    };
+    var zTick=false;
+    var onScrollZ=function(){if(isStaticZ())return;if(!zTick){requestAnimationFrame(function(){frameZ();zTick=false});zTick=true;}};
+    var applyZ=function(){
+      if(isStaticZ()){zoom.classList.add('is-static');zMedia.removeAttribute('style');zIntro.style.opacity='';zOv.style.opacity='';zRule.style.transform='';}
+      else{zoom.classList.remove('is-static');frameZ();}
+    };
+    window.addEventListener('scroll',onScrollZ,{passive:true});
+    window.addEventListener('resize',applyZ);
+    applyZ();
+  }
+
+  // featured row arrows
+  var fr=document.getElementById('featRow');
+  if(fr){
+    var step=function(){return Math.min(460,fr.clientWidth*0.85)};
+    document.getElementById('featPrev').addEventListener('click',function(){fr.scrollBy({left:-step(),behavior:'smooth'})});
+    document.getElementById('featNext').addEventListener('click',function(){fr.scrollBy({left:step(),behavior:'smooth'})});
+  }
+
+  // UGC row arrows
+  var ur=document.getElementById('ugcRow');
+  if(ur){
+    var ustep=function(){return Math.min(420,ur.clientWidth*0.8)};
+    document.getElementById('ugcPrev').addEventListener('click',function(){ur.scrollBy({left:-ustep(),behavior:'smooth'})});
+    document.getElementById('ugcNext').addEventListener('click',function(){ur.scrollBy({left:ustep(),behavior:'smooth'})});
+  }
+
+  // newsletter
+  var f=document.getElementById('newsForm');
+  if(f){f.addEventListener('submit',function(e){e.preventDefault();f.querySelector('input').value='';document.getElementById('newsOk').hidden=false})}
+
+  if(window.__bindReveals)window.__bindReveals();
+})();
+</script>
+</body>
+</html>
