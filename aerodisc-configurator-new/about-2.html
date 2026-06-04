@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — HOCENLUB Aerodisc</title>
+  <link rel="icon" type="image/png" href="public/wheel-1.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Archivo+Black&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0c0b0a; --surface:#16140f; --bg-2:#100e0a;
+      --text:#f4f1ea; --text-muted:rgba(244,241,234,0.56); --border:rgba(244,241,234,0.14);
+      --red:#D5001C; --red-hover:#e8243c; --maxw:1240px;
+      --transition:420ms cubic-bezier(0.4,0,0.2,1); --ease:cubic-bezier(.16,1,.3,1);
+    }
+    html{scroll-behavior:smooth;scroll-padding-top:84px}
+    @media(max-width:480px){html{scroll-padding-top:64px}}
+    body{font-family:'Archivo',sans-serif;font-weight:400;background:var(--bg);color:var(--text);line-height:1.55;overflow-x:clip;-webkit-text-size-adjust:100%}
+    img{max-width:100%;display:block}
+    h1,h2,h3{font-family:'Archivo Black',sans-serif;text-transform:uppercase;line-height:1.0;letter-spacing:0.01em}
+    a{color:inherit}
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+    @media(max-width:480px){.wrap{padding:0 18px}}
+    .eyebrow{font-size:11px;letter-spacing:0.32em;text-transform:uppercase;color:var(--red);font-weight:700}
+    ::selection{background:var(--red);color:#fff}
+
+    /* ── Motion primitives ── */
+    .reveal{opacity:0;transform:translateY(32px);transition:opacity .95s var(--ease),transform .95s var(--ease)}
+    .reveal.in{opacity:1;transform:none}
+    .reveal.d1{transition-delay:.09s}.reveal.d2{transition-delay:.18s}
+    .reveal.d3{transition-delay:.27s}.reveal.d4{transition-delay:.36s}
+
+    /* top scroll progress */
+    .prog{position:fixed;top:0;left:0;right:0;height:2px;background:var(--red);transform:scaleX(0);transform-origin:0 50%;z-index:120;will-change:transform}
+
+    /* ── Buttons ── */
+    .btn{display:inline-flex;align-items:center;gap:7px;font-family:'Archivo Black',sans-serif;font-size:12px;letter-spacing:0.07em;text-transform:uppercase;padding:15px 30px;border-radius:3px;text-decoration:none;cursor:pointer;transition:background var(--transition),color var(--transition),border-color var(--transition),gap var(--transition),transform 120ms;border:1.5px solid transparent}
+    .btn:active{transform:scale(0.99)}
+    .btn-red{background:var(--red);color:#fff}
+    .btn-red:hover{background:var(--red-hover);gap:11px}
+    .btn-light{background:transparent;color:#fff;border-color:rgba(255,255,255,0.45)}
+    .btn-light:hover{background:rgba(255,255,255,0.12);border-color:#fff;gap:11px}
+
+    /* ── Nav (transparent over hero → solid dark) ── */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:100;transition:background var(--transition),border-color var(--transition),transform 350ms cubic-bezier(0.4,0,0.2,1);border-bottom:1px solid transparent}
+    .nav.solid{background:rgba(12,11,10,0.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+    .nav.-hide{transform:translateY(-100%)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;height:74px}
+    .nav-logo img{height:30px;width:auto}
+    .nav-links{display:flex;gap:30px}
+    .nav-links a{font-size:12px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;color:rgba(244,241,234,0.78);transition:color var(--transition)}
+    .nav-links a:hover,.nav-links a.current{color:#fff}
+    .nav-item{display:flex;align-items:center}
+    .nav-shop{display:flex;align-items:center;gap:6px;cursor:pointer}
+    .nav-shop::after{content:"";width:5px;height:5px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg) translateY(-1px);opacity:0.85;transition:transform var(--transition)}
+    .has-mega:hover .nav-shop::after{transform:rotate(-135deg) translateY(-1px)}
+    .mega{position:absolute;left:0;right:0;top:100%;background:#141210;border-bottom:1px solid var(--border);box-shadow:0 30px 50px -30px rgba(0,0,0,0.7);opacity:0;visibility:hidden;transform:translateY(-8px);transition:opacity .25s ease,transform .25s ease,visibility .25s;z-index:99}
+    .has-mega:hover .mega,.has-mega:focus-within .mega{opacity:1;visibility:visible;transform:none}
+    .mega-inner{padding:28px 0 34px}
+    .mega-head{font-family:'Archivo Black',sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:0.12em;color:var(--text-muted);margin-bottom:18px}
+    .mega-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:14px}
+    .mega-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px 10px;border:1px solid var(--border);border-radius:12px;background:var(--bg);text-decoration:none;transition:border-color var(--transition),transform var(--transition),box-shadow var(--transition)}
+    .mega-card:hover{border-color:rgba(244,241,234,0.5);transform:translateY(-3px)}
+    .mega-card img{height:auto;max-height:24px;max-width:88px;object-fit:contain;display:block;filter:invert(1) brightness(1.6)}
+    .mega-card span{font-family:'Archivo Black',sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:0.03em;color:var(--text)}
+    @media(max-width:1080px){.mega-grid{grid-template-columns:repeat(4,1fr)}}
+    .nav-right{display:flex;align-items:center;gap:18px}
+    .nav-ic{position:relative;display:inline-flex;color:#fff;transition:color var(--transition)}
+    .nav-ic:hover{color:var(--red)}
+    .nav-ic svg{width:21px;height:21px}
+    .nav-badge{position:absolute;top:-6px;right:-7px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:var(--red);color:#fff;font-size:9px;font-weight:700;line-height:15px;text-align:center}
+    .nav-burger{display:none;background:none;border:none;color:#fff;font-size:22px;cursor:pointer}
+    @media(max-width:860px){
+      .nav-links{position:fixed;inset:74px 0 auto 0;flex-direction:column;gap:0;background:#0e0c09;border-bottom:1px solid var(--border);transform:translateY(-130%);transition:transform var(--transition)}
+      .nav-links.open{transform:none}
+      .nav-links a{color:var(--text-muted);padding:16px 24px;border-top:1px solid var(--border)}
+      .nav-item{display:block}
+      .nav-shop::after{display:none}
+      .mega{display:none}
+      .nav-burger{display:block}
+    }
+
+    /* ── Hero (pinned cinematic zoom) ── */
+    .chero{position:relative;height:172vh}
+    .chero-pin{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;align-items:center}
+    .chero-bg{position:absolute;inset:0;will-change:transform}
+    .chero-bg img{width:100%;height:100%;object-fit:cover}
+    .chero-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,7,6,0.9),rgba(8,7,6,0.5) 55%,rgba(8,7,6,0.35)),linear-gradient(180deg,rgba(8,7,6,0.4),rgba(8,7,6,0.75));opacity:0.4;will-change:opacity}
+    .chero-inner{position:relative;z-index:2;width:100%;will-change:transform,opacity}
+    .chero-inner .eyebrow{display:block;margin-bottom:22px}
+    .chero h1{font-size:clamp(46px,8.4vw,124px);line-height:0.86;max-width:15ch}
+    .chero-sub{margin-top:26px;max-width:48ch;color:rgba(244,241,234,0.8);font-size:clamp(15px,1.5vw,18px);line-height:1.6}
+    .scrollcue{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--text-muted);font-size:10px;letter-spacing:0.25em;text-transform:uppercase}
+    .scrollcue i{width:1px;height:42px;background:linear-gradient(var(--red),transparent);animation:cue 1.8s ease-in-out infinite}
+    @keyframes cue{0%,100%{opacity:.3;transform:scaleY(.6)}50%{opacity:1;transform:scaleY(1)}}
+
+    /* ── Manifesto ── */
+    .manifesto{padding:clamp(90px,13vw,180px) 0}
+    .manifesto h2{font-size:clamp(28px,4.4vw,64px);line-height:1.12;max-width:18ch;letter-spacing:0.005em}
+    .manifesto h2 .reveal{display:inline-block}
+    .manifesto h2 em{font-style:normal;color:var(--red)}
+
+    /* ── Split feature ── */
+    .split{padding:clamp(60px,7vw,110px) 0}
+    .split-grid{display:grid;grid-template-columns:1.02fr 0.98fr;gap:clamp(40px,5vw,80px);align-items:center}
+    .split.rev .split-media{order:2}
+    .split-media{aspect-ratio:4/3;border-radius:4px;overflow:hidden;background:#000;border:1px solid var(--border)}
+    .split-media img{width:100%;height:118%;object-fit:cover;will-change:transform}
+    .split .eyebrow{display:block;margin-bottom:18px}
+    .split h2{font-size:clamp(30px,3.8vw,56px);line-height:0.95;margin-bottom:20px}
+    .split p{color:var(--text-muted);font-size:16px;line-height:1.75;max-width:48ch}
+
+    /* ── Stats (count-up) ── */
+    .cstats{padding:clamp(56px,6vw,88px) 0;background:var(--bg-2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+    .cstats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:28px;text-align:center}
+    .cstat b{display:block;font-family:'Archivo Black',sans-serif;font-size:clamp(30px,3.6vw,52px);line-height:1;color:#fff;font-variant-numeric:tabular-nums}
+    .cstat span{display:block;margin-top:12px;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted)}
+    @media(max-width:900px){.cstats-grid{grid-template-columns:repeat(3,1fr);gap:34px 22px}}
+    @media(max-width:520px){.cstats-grid{grid-template-columns:repeat(2,1fr);gap:30px 18px}}
+
+    /* ── Steps ── */
+    .steps{padding:clamp(60px,7vw,110px) 0}
+    .steps-head{max-width:640px;margin:0 auto 56px;text-align:center}
+    .steps-head .eyebrow{display:block;margin-bottom:16px}
+    .steps-head h2{font-size:clamp(30px,4vw,56px);line-height:0.96;margin-bottom:18px}
+    .steps-head h2 em{font-style:normal;color:var(--red)}
+    .steps-head p{color:var(--text-muted);font-size:16px;line-height:1.65;max-width:54ch;margin:0 auto}
+    .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+    .step{padding-top:26px;border-top:2px solid var(--red)}
+    .step .snum{font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:0.14em;color:var(--text-muted)}
+    .step h3{font-size:21px;text-transform:uppercase;margin:14px 0 11px;letter-spacing:0.01em}
+    .step p{color:var(--text-muted);font-size:15px;line-height:1.7}
+    @media(max-width:780px){.steps-grid{grid-template-columns:1fr;gap:0}.step{padding:24px 0;border-top:1px solid var(--border)}.step:first-child{border-top:2px solid var(--red)}}
+
+    /* ── Inside the disc ── */
+    .feat2{padding:clamp(60px,7vw,108px) 0;background:var(--bg-2);border-top:1px solid var(--border)}
+    .feat2-head{max-width:640px;margin:0 auto 48px;text-align:center}
+    .feat2-head .eyebrow{display:block;margin-bottom:16px}
+    .feat2-head h2{font-size:clamp(30px,3.8vw,56px);line-height:0.96}
+    .feat2-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+    .feat2-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:36px 34px;transition:border-color var(--transition),transform var(--transition),background var(--transition)}
+    .feat2-card:hover{border-color:rgba(244,241,234,0.4);transform:translateY(-4px);background:#1b1812}
+    .feat2-card .fnum{font-family:'Archivo Black',sans-serif;font-size:12px;letter-spacing:0.18em;color:var(--red)}
+    .feat2-card h3{font-size:20px;text-transform:uppercase;margin:14px 0 11px;letter-spacing:0.01em}
+    .feat2-card p{color:var(--text-muted);font-size:15px;line-height:1.7}
+    @media(max-width:680px){.feat2-grid{grid-template-columns:1fr;gap:16px}}
+
+    /* ── Brand wall ── */
+    .brands{padding:clamp(60px,7vw,104px) 0;text-align:center}
+    .brands .eyebrow{display:block;margin-bottom:16px}
+    .brands h2{font-size:clamp(28px,3.6vw,50px);line-height:0.98;margin-bottom:16px}
+    .brands>.wrap>p{color:var(--text-muted);max-width:52ch;margin:0 auto 48px;font-size:15px;line-height:1.6}
+    .brands-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:clamp(28px,5vw,64px)}
+    .brands-row img{height:auto;object-fit:contain;opacity:0.6;filter:invert(1) brightness(1.7);transition:opacity var(--transition)}
+    .brands-row img:hover{opacity:1}
+    .brands-row img[alt="BYD"]{height:18px}
+    .brands-row img[alt="AION"]{height:20px}
+    .brands-row img[alt="MG"]{height:30px}
+    .brands-row img[alt="NETA"]{height:30px}
+    .brands-row img[alt="Denza"]{height:34px}
+    .brands-row img[alt="Deepal"]{height:34px}
+    .brands-row img[alt="Avatr"]{height:36px}
+    @media(max-width:600px){.brands-row{gap:24px 30px}.brands-row img{transform:scale(0.84)}}
+
+    /* ── CTA ── */
+    .cta{position:relative;overflow:hidden;text-align:center}
+    .cta-bg{position:absolute;inset:0;will-change:transform}
+    .cta-bg img{width:100%;height:122%;object-fit:cover}
+    .cta::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(8,7,6,0.62),rgba(8,7,6,0.72));z-index:1}
+    .cta .wrap{position:relative;z-index:2;padding:clamp(90px,12vw,160px) 0}
+    .cta .eyebrow{display:block;margin-bottom:18px}
+    .cta h2{font-size:clamp(34px,5vw,76px);line-height:0.92;margin-bottom:18px}
+    .cta p{color:rgba(244,241,234,0.82);max-width:46ch;margin:0 auto 32px;font-size:16px;line-height:1.6}
+    .cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+    /* ── Full-bleed image bands ── */
+    .bleed{position:relative;height:clamp(440px,74vh,780px);overflow:hidden}
+    .bleed-bg{position:absolute;inset:0;will-change:transform}
+    .bleed-bg img{width:100%;height:122%;object-fit:cover}
+    .bleed::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(8,7,6,0.22),rgba(8,7,6,0.78));z-index:1}
+    .bleed .wrap{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:clamp(40px,6vw,76px)}
+    .bleed .eyebrow{display:block;margin-bottom:16px}
+    .bleed h2{font-size:clamp(28px,4.4vw,64px);line-height:0.94;color:#fff;max-width:18ch}
+    @media(max-width:600px){.bleed{height:62vh}}
+
+    /* ── Thirty faces marquee (30 designs) ── */
+    .faces{padding:clamp(60px,7vw,104px) 0;overflow:hidden;border-top:1px solid var(--border);background:var(--bg-2)}
+    .faces-head{text-align:center;max-width:640px;margin:0 auto 52px}
+    .faces-head .eyebrow{display:block;margin-bottom:16px}
+    .faces-head h2{font-size:clamp(30px,3.8vw,54px);line-height:0.96}
+    .faces-head h2 em{font-style:normal;color:var(--red)}
+    .wheel-row{display:flex;width:max-content;gap:clamp(16px,2vw,28px)}
+    .wheel-row.r1{animation:wm-left 66s linear infinite;margin-bottom:clamp(16px,2vw,28px)}
+    .wheel-row.r2{animation:wm-right 66s linear infinite}
+    .faces:hover .wheel-row{animation-play-state:paused}
+    .wheel-row .w{flex:0 0 auto;width:clamp(104px,11vw,150px);aspect-ratio:1;border-radius:50%;background:rgba(244,241,234,0.05);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:background var(--transition)}
+    .wheel-row .w:hover{background:rgba(244,241,234,0.1)}
+    .wheel-row .w img{width:88%;height:88%;object-fit:contain;border-radius:50%;will-change:transform}
+    .wheel-row .w:hover img{animation:wheelspin 2.4s linear infinite}
+    @keyframes wheelspin{to{transform:rotate(360deg)}}
+    @keyframes wm-left{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    @keyframes wm-right{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+    @media(max-width:600px){.faces{padding:54px 0}.faces-head{margin-bottom:34px}.wheel-row .w{width:86px}}
+
+    /* ── Footer ── */
+    .footer{background:#080706;color:rgba(244,241,234,0.62);padding:64px 0 32px;border-top:1px solid var(--border)}
+    .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:36px;padding-bottom:40px;border-bottom:1px solid var(--border)}
+    .footer-logo{margin-bottom:14px}
+    .footer-logo img{height:40px;width:auto;display:block}
+    .footer-brand p{max-width:30ch;font-size:14px}
+    .footer-col h4{font-family:'Archivo Black',sans-serif;font-size:13px;text-transform:uppercase;color:#fff;margin-bottom:16px;letter-spacing:0.06em}
+    .footer-col a{display:block;color:rgba(244,241,234,0.55);text-decoration:none;font-size:14px;margin-bottom:10px;transition:color var(--transition)}
+    .footer-col a:hover{color:#fff}
+    .footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:28px}
+    .footer-pay{display:flex;gap:16px;align-items:center;opacity:0.7}
+    .footer-pay img{filter:invert(1)}
+    .footer-legal{font-size:12px;color:rgba(244,241,234,0.45)}
+    .foot-news{margin-top:22px}
+    .foot-news label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:10px}
+    .foot-news .row{display:flex;gap:10px;max-width:360px}
+    .foot-news input{flex:1 1 auto;min-width:0;background:rgba(244,241,234,0.06);border:1px solid var(--border);color:#fff;padding:12px 14px;border-radius:3px;font-family:'Archivo',sans-serif;font-size:14px}
+    .foot-news input::placeholder{color:rgba(244,241,234,0.4)}
+    .foot-news input:focus{outline:none;border-color:rgba(244,241,234,0.6)}
+    .foot-news button{flex:0 0 auto;border:none;cursor:pointer}
+    .foot-ok{color:#fff;font-size:13px;margin-top:10px}
+    @media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:28px}}
+    @media(max-width:480px){.footer-grid{grid-template-columns:1fr 1fr;gap:24px 28px}.footer-brand{grid-column:1 / -1}}
+
+    /* ── Responsive ── */
+    @media(max-width:860px){
+      .chero{height:128vh}
+      .chero h1{font-size:clamp(40px,7.6vw,74px)}
+      .nav-inner{height:64px}
+      .nav-links{inset:64px 0 auto 0}
+    }
+    @media(max-width:780px){
+      .split-grid,.split.rev .split-grid{grid-template-columns:1fr;gap:24px}
+      .split.rev .split-media{order:0}
+      .split-media{aspect-ratio:16/10}
+      .manifesto{padding:74px 0}
+      .manifesto h2{font-size:clamp(26px,6.6vw,40px)}
+      .steps-head{margin-bottom:36px}
+      .bleed h2{font-size:clamp(26px,6.2vw,42px)}
+    }
+    @media(max-width:600px){
+      .chero{height:116vh}
+      .chero-pin{height:100svh}
+      .chero h1{font-size:clamp(32px,9vw,46px)}
+      .chero-sub{font-size:15px;margin-top:18px}
+      .chero .eyebrow{margin-bottom:16px}
+      .scrollcue{display:none}
+      .manifesto{padding:58px 0}
+      .split{padding:50px 0}
+      .split h2{font-size:clamp(28px,8vw,38px)}
+      .split p{font-size:15px}
+      .cstats{padding:48px 0}
+      .cstat b{font-size:clamp(26px,8.4vw,34px)}
+      .cstat span{font-size:10px;margin-top:9px}
+      .steps{padding:52px 0}
+      .feat2{padding:52px 0}
+      .feat2-card{padding:28px 24px}
+      .brands{padding:54px 0}
+      .cta .wrap{padding:78px 0}
+      .cta h2{font-size:clamp(30px,9vw,44px)}
+    }
+    @media(max-width:400px){
+      .chero h1{font-size:clamp(28px,8.6vw,36px)}
+      .feat2-card{padding:24px 20px}
+    }
+    @media(prefers-reduced-motion:reduce){
+      *{scroll-behavior:auto}
+      .reveal{opacity:1;transform:none;transition:none}
+      .scrollcue i{animation:none}
+      .chero{height:100vh}.chero-pin{position:relative}
+      .wheel-row{animation:none;flex-wrap:wrap;justify-content:center;width:100%}
+      .wheel-row .w:hover img{animation:none}
+    }
+  </style>
+</head>
+<body>
+
+<div class="prog" id="prog"></div>
+
+<!-- ── Nav ── -->
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="nav-logo" href="index-3.html" aria-label="HOCENLUB home">
+      <img src="public/logo-white.png" alt="HOCENLUB">
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a href="index-3.html">Home</a>
+      <span class="nav-item has-mega">
+        <a href="collection.html" class="nav-shop">Shop</a>
+        <div class="mega">
+          <div class="mega-inner wrap">
+            <div class="mega-head">Shop by car brand</div>
+            <div class="mega-grid">
+              <a class="mega-card" href="index-2.html"><img src="public/brand-byd.png" alt=""><span>For BYD</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-denza.png" alt=""><span>For Denza</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-aion.png" alt=""><span>For AION</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-neta.png" alt=""><span>For NETA</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-deepal.png" alt=""><span>For Deepal</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-avatr.png" alt=""><span>For Avatr</span></a>
+              <a class="mega-card" href="index-2.html"><img src="public/brand-mg.png" alt=""><span>For MG</span></a>
+            </div>
+          </div>
+        </div>
+      </span>
+      <a href="about-2.html" class="current">About</a>
+      <a href="index-3.html#contact">Contact</a>
+    </nav>
+    <div class="nav-right">
+      <a href="#" class="nav-ic" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg></a>
+      <a href="#" class="nav-ic" aria-label="Cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l-1.2 12.2a1.5 1.5 0 0 1-1.5 1.3H8.7a1.5 1.5 0 0 1-1.5-1.3Z"/><path d="M9 7V5.5a3 3 0 0 1 6 0V7"/></svg><span class="nav-badge">0</span></a>
+      <button class="nav-burger" id="burger" aria-label="Menu">&#9776;</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── Chapter 0 — Hero (pinned zoom) ── -->
+<section class="chero" id="top">
+  <div class="chero-pin">
+    <div class="chero-bg" id="cheroBg"><img src="public/fit-wheels.jpg" alt="The Aerodisc among factory wheels"></div>
+    <div class="chero-shade" id="cheroShade"></div>
+    <div class="wrap chero-inner" id="cheroInner">
+      <span class="eyebrow">About HOCENLUB</span>
+      <h1>Range Is The Whole Point.</h1>
+      <p class="chero-sub">We build Aerodisc — aerodynamic wheel covers engineered to cut drag, keep brake dust out, and hand your EV back the kilometres its wheels quietly give away.</p>
+    </div>
+    <div class="scrollcue"><span>Scroll</span><i></i></div>
+  </div>
+</section>
+
+<!-- ── Manifesto ── -->
+<section class="manifesto">
+  <div class="wrap">
+    <h2><span class="reveal">A smoother wheel is</span> <span class="reveal d1">a <em>longer drive.</em></span> <span class="reveal d2">The rest is just engineering.</span></h2>
+  </div>
+</section>
+
+<!-- ── Full-bleed: airflow over the car ── -->
+<section class="bleed">
+  <div class="bleed-bg parallax"><img src="public/wind.jpg" alt="An Aerodisc-equipped EV with airflow tracing its body"></div>
+  <div class="wrap">
+    <span class="eyebrow reveal">The idea</span>
+    <h2 class="reveal d1">Built To Disappear<br>Into The Airflow</h2>
+  </div>
+</section>
+
+<!-- ── Chapter 01 — Mission ── -->
+<section class="split" id="story">
+  <div class="wrap split-grid">
+    <div class="split-text">
+      <span class="eyebrow reveal">Why we exist</span>
+      <h2 class="reveal d1">It Started With<br>Wasted Range</h2>
+      <p class="reveal d2">Every EV leaves range on the table. Open-spoke wheels look sharp standing still, but at speed they churn the air and pull the battery down. The aero covers on the market were an afterthought — loose, generic, obviously aftermarket. So we built the one we wanted on our own cars: a cover that seals the wheel face, looks like it left the factory that way, and gives the range back.</p>
+    </div>
+    <div class="split-media reveal d1 parallax"><img src="public/install.jpg" alt="An Aerodisc cover held beside a factory EV wheel"></div>
+  </div>
+</section>
+
+<!-- ── Stats (count-up) ── -->
+<section class="cstats">
+  <div class="wrap cstats-grid">
+    <div class="cstat reveal"><b data-count="30">0</b><span>Cover designs</span></div>
+    <div class="cstat reveal d1"><b data-count="7">0</b><span>EV brands fitted</span></div>
+    <div class="cstat reveal d2"><b data-count="9" data-prefix="~">0</b><span>Min per wheel</span></div>
+    <div class="cstat reveal d3"><b data-count="100000" data-format="comma">0</b><span>Km finish warranty</span></div>
+    <div class="cstat reveal d4"><b data-count="30">0</b><span>Day test-drive</span></div>
+  </div>
+</section>
+
+<!-- ── Chapter 02 — How it works ── -->
+<section class="steps" id="process">
+  <div class="wrap">
+    <div class="steps-head">
+      <span class="eyebrow reveal">How it works</span>
+      <h2 class="reveal d1">One Disc. <em>Thirty Faces.</em></h2>
+      <p class="reveal d2">Aerodisc never touches rolling diameter, so your speed and range readouts stay exactly true. Getting there takes three steps — and no trip to a shop.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step reveal"><div class="snum">STEP 01</div><h3>Choose Your Fit</h3><p>Pick your brand and model, then your favourite of thirty faces. We load the exact fitment for BYD, Denza, AION, NETA, Deepal, Avatr or MG.</p></div>
+      <div class="step reveal d1"><div class="snum">STEP 02</div><h3>Twist &amp; Lock</h3><p>Each cover seats over your factory wheel and twists into a patented lock — factory-tight, tool-light, about nine minutes a wheel.</p></div>
+      <div class="step reveal d2"><div class="snum">STEP 03</div><h3>Drive Farther</h3><p>Cleaner airflow, less brake dust, more usable range. Wash it like any wheel and forget it's even there.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Full-bleed: the difference (turbulent vs smooth) ── -->
+<section class="bleed">
+  <div class="bleed-bg parallax"><img src="public/game.png" alt="An Aerodisc-equipped EV cornering on track"></div>
+  <div class="wrap">
+    <span class="eyebrow reveal">The difference</span>
+    <h2 class="reveal d1">Turbulence Out.<br>Range In.</h2>
+  </div>
+</section>
+
+<!-- ── Chapter 03 — Engineering ── -->
+<section class="split rev" id="engineering">
+  <div class="wrap split-grid">
+    <div class="split-media reveal parallax"><img src="public/material.jpg" alt="Close-up of the Aerodisc cover face and finish"></div>
+    <div class="split-text">
+      <span class="eyebrow reveal">How we build</span>
+      <h2 class="reveal d1">Engineers,<br>Not Stylists</h2>
+      <p class="reveal d2">We start with airflow, not ornament. Every face is shaped to move air cleanly, then validated until it seats factory-tight and stays silent well past highway speed. The sealed surface keeps brake dust off the barrel and shrugs off washes, brushes and pressure rinses. What looks like styling is really aerodynamics doing its job.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Inside the disc ── -->
+<section class="feat2">
+  <div class="wrap">
+    <div class="feat2-head">
+      <span class="eyebrow reveal">Inside the disc</span>
+      <h2 class="reveal d1">What Makes It Work</h2>
+    </div>
+    <div class="feat2-grid">
+      <div class="feat2-card reveal"><div class="fnum">01</div><h3>Sealed Aero Face</h3><p>A continuous surface smooths the air your open wheels would otherwise churn — the core of every kilometre we give back.</p></div>
+      <div class="feat2-card reveal d1"><div class="fnum">02</div><h3>Patented Twist-Lock</h3><p>Seats over the factory wheel and locks tight in seconds — validated dead-silent well past legal highway speed.</p></div>
+      <div class="feat2-card reveal d2"><div class="fnum">03</div><h3>OEM-Grade Finish</h3><p>Colour-through materials and a 100,000 km finish warranty that reads as factory-fitted, never aftermarket.</p></div>
+      <div class="feat2-card reveal d3"><div class="fnum">04</div><h3>Brake-Dust Shield</h3><p>The closed face keeps dust out of the barrel, so cleaning a wheel becomes a thirty-second rinse.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Thirty faces marquee ── -->
+<section class="faces">
+  <div class="wrap faces-head">
+    <span class="eyebrow reveal">The lineup</span>
+    <h2 class="reveal d1">Thirty Faces. <em>One Disc.</em></h2>
+  </div>
+  <div class="wheel-rows">
+    <div class="wheel-row r1">
+      <a class="w" href="collection.html"><img src="public/wheel-1.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-2.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-3.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-4.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-5.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-6.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-7.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-8.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-9.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-10.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-11.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-12.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-13.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-14.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-15.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-1.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-2.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-3.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-4.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-5.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-6.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-7.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-8.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-9.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-10.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-11.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-12.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-13.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-14.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-15.png" alt="" loading="lazy"></a>
+    </div>
+    <div class="wheel-row r2">
+      <a class="w" href="collection.html"><img src="public/wheel-16.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-17.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-18.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-19.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-20.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-21.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-22.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-23.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-24.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-25.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-26.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-27.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-28.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-29.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-30.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-16.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-17.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-18.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-19.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-20.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-21.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-22.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-23.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-24.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-25.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-26.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-27.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-28.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-29.png" alt="" loading="lazy"></a>
+      <a class="w" href="collection.html"><img src="public/wheel-30.png" alt="" loading="lazy"></a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Chapter 04 — Brand wall ── -->
+<section class="brands" id="fit">
+  <div class="wrap">
+    <span class="eyebrow reveal">Universal fit</span>
+    <h2 class="reveal d1">Made For The Cars You Drive</h2>
+    <p class="reveal d2">Precision-fit sets for the EVs people actually drive — with more brands and models landing every season.</p>
+    <div class="brands-row reveal d2">
+      <img src="public/brand-byd.png" alt="BYD">
+      <img src="public/brand-denza.png" alt="Denza">
+      <img src="public/brand-aion.png" alt="AION">
+      <img src="public/brand-neta.png" alt="NETA">
+      <img src="public/brand-deepal.png" alt="Deepal">
+      <img src="public/brand-avatr.png" alt="Avatr">
+      <img src="public/brand-mg.png" alt="MG">
+    </div>
+  </div>
+</section>
+
+<!-- ── Chapter 05 — CTA ── -->
+<section class="cta" id="shop">
+  <div class="cta-bg" id="ctaBg"><img src="public/fluid.png" alt="An Aerodisc-equipped EV in studio light"></div>
+  <div class="wrap">
+    <span class="eyebrow reveal" style="color:#fff">Your turn</span>
+    <h2 class="reveal d1">Find Your Fit</h2>
+    <p class="reveal d2">Pick your brand, configure design, size and finish — and give your EV its range back.</p>
+    <div class="cta-btns reveal d3">
+      <a class="btn btn-red" href="collection.html">Shop covers</a>
+      <a class="btn btn-light" href="index-2.html">Configure yours</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="footer" id="footer">
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <div class="footer-logo"><img src="public/logo-white.png" alt="HOCENLUB"></div>
+      <p>Aerodynamic wheel covers engineered for every EV.</p>
+      <form class="foot-news" id="footNews">
+        <label for="footEmail">Get early drops &amp; range tips</label>
+        <div class="row">
+          <input id="footEmail" type="email" required placeholder="Email address" aria-label="Email address">
+          <button class="btn btn-red" type="submit">Join</button>
+        </div>
+        <p class="foot-ok" id="footOk" hidden>Thanks &mdash; you're in. &#10003;</p>
+      </form>
+    </div>
+    <div class="footer-col"><h4>Shop</h4><a href="collection.html">All Wheel Covers</a><a href="index-2.html">Configure</a><a href="#">Gift Cards</a></div>
+    <div class="footer-col"><h4>Company</h4><a href="index-3.html#aero">Technology</a><a href="about-2.html">About</a><a href="index-3.html#contact">Contact</a><a href="#">Careers</a></div>
+    <div class="footer-col"><h4>Support</h4><a href="#">Shipping</a><a href="#">Returns</a><a href="#">Warranty</a><a href="index-3.html#contact">Contact</a></div>
+  </div>
+  <div class="wrap footer-bottom">
+    <div class="footer-pay">
+      <img src="https://cdn.simpleicons.org/visa/f4f1ea" alt="Visa" height="20">
+      <img src="https://cdn.simpleicons.org/mastercard/f4f1ea" alt="Mastercard" height="20">
+      <img src="https://cdn.simpleicons.org/americanexpress/f4f1ea" alt="Amex" height="20">
+      <img src="https://cdn.simpleicons.org/applepay/f4f1ea" alt="Apple Pay" height="20">
+      <img src="https://cdn.simpleicons.org/googlepay/f4f1ea" alt="Google Pay" height="20">
+      <img src="https://cdn.simpleicons.org/paypal/f4f1ea" alt="PayPal" height="20">
+      <img src="https://cdn.simpleicons.org/shopify/f4f1ea" alt="Shop Pay" height="20">
+    </div>
+    <p class="footer-legal">© 2026 HOCENLUB. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── Nav: solid + hide on scroll ── */
+  var nav=document.getElementById('nav');
+  var lastY=window.scrollY;
+
+  /* ── Reveal on scroll ── */
+  if('IntersectionObserver' in window && !reduce){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    },{threshold:0.18,rootMargin:'0px 0px -8% 0px'});
+    document.querySelectorAll('.reveal').forEach(function(el){io.observe(el)});
+  } else {
+    document.querySelectorAll('.reveal').forEach(function(el){el.classList.add('in')});
+  }
+
+  /* ── Count-up ── */
+  function countUp(el){
+    var target=+el.dataset.count, dur=1700, t0=null;
+    var prefix=el.dataset.prefix||'', suffix=el.dataset.suffix||'', comma=el.dataset.format==='comma';
+    function fmt(n){n=Math.round(n);return comma?n.toLocaleString('en-US'):String(n);}
+    function step(ts){if(t0===null)t0=ts;var p=Math.min((ts-t0)/dur,1);var e=1-Math.pow(1-p,3);el.textContent=prefix+fmt(target*e)+suffix;if(p<1)requestAnimationFrame(step);}
+    requestAnimationFrame(step);
+  }
+  var counts=document.querySelectorAll('[data-count]');
+  if('IntersectionObserver' in window && !reduce){
+    var io2=new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ countUp(e.target); io2.unobserve(e.target); } });
+    },{threshold:0.5});
+    counts.forEach(function(el){io2.observe(el)});
+  } else {
+    counts.forEach(function(el){var p=el.dataset.prefix||'',s=el.dataset.suffix||'',c=el.dataset.format==='comma';el.textContent=p+(c?(+el.dataset.count).toLocaleString('en-US'):el.dataset.count)+s;});
+  }
+
+  /* ── Scroll-driven: hero zoom, parallax, progress bar, nav ── */
+  var chero=document.querySelector('.chero'),cheroBg=document.getElementById('cheroBg'),
+      cheroInner=document.getElementById('cheroInner'),cheroShade=document.getElementById('cheroShade'),
+      ctaBg=document.getElementById('ctaBg'),prog=document.getElementById('prog');
+  var paras=[].slice.call(document.querySelectorAll('.parallax'));
+  var tick=false;
+  function frame(){
+    var y=window.scrollY,vh=window.innerHeight;
+    /* nav */
+    var open=document.querySelector('.nav-links.open');
+    nav.classList.toggle('solid',y>40);
+    if(!open && y>160 && y>lastY+4){nav.classList.add('-hide');}
+    else if(y<lastY-4 || y<=160){nav.classList.remove('-hide');}
+    lastY=y;
+    /* progress bar */
+    if(prog){var sp=document.documentElement.scrollHeight-vh;prog.style.transform='scaleX('+(sp>0?Math.min(y/sp,1):0)+')';}
+    if(!reduce){
+      /* hero zoom + fade */
+      if(chero){var h=chero.offsetHeight-vh;var p=h>0?Math.min(Math.max(y/h,0),1):0;
+        if(cheroBg)cheroBg.style.transform='scale('+(1+p*0.16)+')';
+        if(cheroInner){cheroInner.style.transform='translateY('+(p*-72)+'px)';cheroInner.style.opacity=String(Math.max(1-p*1.3,0));}
+        if(cheroShade)cheroShade.style.opacity=String(Math.min(0.4+p*0.5,0.9));}
+      /* parallax media */
+      paras.forEach(function(el){var r=el.getBoundingClientRect();if(r.bottom<0||r.top>vh)return;var off=(r.top+r.height/2-vh/2);var img=el.querySelector('img');if(img)img.style.transform='translate3d(0,'+(off*-0.055)+'px,0)';});
+      if(ctaBg){var cr=ctaBg.parentNode.getBoundingClientRect();if(cr.bottom>0&&cr.top<vh){var co=(cr.top+cr.height/2-vh/2);ctaBg.style.transform='translate3d(0,'+(co*-0.05)+'px,0)';}}
+    }
+    tick=false;
+  }
+  window.addEventListener('scroll',function(){if(!tick){requestAnimationFrame(frame);tick=true;}},{passive:true});
+  window.addEventListener('resize',function(){if(!tick){requestAnimationFrame(frame);tick=true;}},{passive:true});
+  frame();
+
+  /* ── Burger ── */
+  var burger=document.getElementById('burger'),links=document.getElementById('navLinks');
+  burger.addEventListener('click',function(){links.classList.toggle('open')});
+  links.addEventListener('click',function(e){if(e.target.tagName==='A')links.classList.remove('open')});
+
+  /* ── Footer email signup ── */
+  var fn=document.getElementById('footNews');
+  if(fn){fn.addEventListener('submit',function(e){e.preventDefault();var ok=document.getElementById('footOk');if(ok)ok.hidden=false;fn.querySelector('input').value='';});}
+})();
+</script>
+</body>
+</html>
